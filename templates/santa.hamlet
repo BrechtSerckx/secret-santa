@@ -1,0 +1,23 @@
+<div .jumbotron>
+    <div .container>
+        <div .row>
+            <h1 .header>
+                Secret Santa
+            <h2>
+                Match up with your friends
+
+<div .container>
+    <!-- Starting
+        ================================================== -->
+    <div .bs-docs-section>
+        <div .row>
+            <div .col-lg-12>
+                <div .page-header>
+                    <h1 #start>Starting
+
+                    <p>
+                        Now that you have a working project you should use the
+                        <a href=http://www.yesodweb.com/book/>Yesod book</a> to learn more.
+                    <p>
+                        You can also use this scaffolded site to explore some concepts, and best practices.
+
