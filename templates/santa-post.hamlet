@@ -1,0 +1,27 @@
+<div .jumbotron>
+    <div .container>
+        <div .row>
+            <h1 .header>
+                Secret Santa
+            <h2>
+                Match up with your friends
+
+<div .container>
+    <!-- Starting
+        ================================================== -->
+    <div .bs-docs-section>
+        <div .row>
+            <div .col-lg-12>
+                <div .page-header>
+                    <h1 #start>Participants
+
+    <div .bs-docs-section>
+        <div .row>
+            <div .col-lg-12>
+                <div .bs-callout bs-callout-info well>
+                    $if null participants
+                        <p>No participants!
+                    $else
+                        <ul>
+                            $forall participant <- participants
+                                <li>#{participant}

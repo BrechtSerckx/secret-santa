@@ -54,16 +54,16 @@ getSantaR = do
     defaultLayout $ do
         aDomId <- newIdent
         setTitle "Secret Santa - BrechtSerckx.be"
-        $(widgetFile "santa")
+        $(widgetFile "santa-get")
 
 postSantaR :: Handler Html
 postSantaR = do
-    ((_, formWidget), formEnctype) <- runFormPost santaForm
-    --let submission = case result of
-    --        FormSuccess res -> Just res
-    --        _ -> Nothing
+    ((result, formWidget), formEnctype) <- runFormPost santaForm
+    let participants = carCustom $ case result of
+            FormSuccess res -> res
+            _ -> ParticipantList {carCustom = []}
 
     defaultLayout $ do
         aDomId <- newIdent
-        setTitle "Welcome To Yesod!"
-        $(widgetFile "santa")
+        setTitle "Secret Santa - BrechtSerckx.be"
+        $(widgetFile "santa-post")
