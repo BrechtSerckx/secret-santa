@@ -8,11 +8,13 @@ module Handler.Santa where
 
 import Import
 import Yesod.Form.Bootstrap3
-import SecretSanta (randomMatch, shuffle)
+import SecretSanta (randomMatch)
+import Data.List (nub)
 
 data ParticipantList = ParticipantList
     { carCustom  :: [Text]
     } deriving Show
+
 
 
 santaAForm :: AForm Handler ParticipantList
@@ -23,30 +25,27 @@ santaAForm = ParticipantList
 santaForm :: Html -> MForm Handler (FormResult ParticipantList, Widget)
 santaForm = renderBootstrap3 bh santaAForm
     where
-        bh = BootstrapHorizontalForm
-            { bflLabelOffset = ColLg 0
-            , bflLabelSize = ColLg 1
-            , bflInputOffset = ColSm 1
-            , bflInputSize = ColLg 1
-            }
+        bh = BootstrapBasicForm
+
 
 
 santaField :: Field Handler [Text]
 santaField = Field
     { fieldParse = \rawVals _fileVals ->
-        return $ validateSantaField rawVals
-    , fieldView = \idAttr nameAttr otherAttrs eResult isReq ->
+        case rawVals of
+            ps@(_:_:_) -> return $ Right $ Just $ nub . filter (/= "") $ ps
+            _          -> return $ Left "You must enter at least two participants"
+    , fieldView = \_idAttr nameAttr otherAttrs _eResult _isReq ->
         [whamlet|
-            <input id=test name=#{nameAttr} *{otherAttrs} type=text>
-            <input id=test name=#{nameAttr} *{otherAttrs} type=text>
-            <input id=test name=#{nameAttr} *{otherAttrs} type=text>
-        |]
+            <div .participant_input_wrapper .table .table-striped .table-bordered .table-highlight>
+                <span .form-group .tr .participant_input_proto style="display:none">
+                    <input name=#{nameAttr} *{otherAttrs} type=text .td>
+                    <span .remove_field .glyphicon .glyphicon-remove>
+        |] 
     , fieldEnctype = UrlEncoded
     }
 
-validateSantaField :: [Text] -> Either (SomeMessage (HandlerSite Handler)) (Maybe [Text])
-validateSantaField ps@(_:_) = Right $ Just ps
-validateSantaField [] = Left "invalid"
+
 
 
 getSantaR :: Handler Html
@@ -59,10 +58,14 @@ getSantaR = do
 
 postSantaR :: Handler Html
 postSantaR = do
-    ((result, formWidget), formEnctype) <- runFormPost santaForm
-    participants <- liftIO $ shuffle $ carCustom $ case result of
+    ((result, _formWidget), _formEnctype) <- runFormPost santaForm
+
+    let participants = carCustom $ case result of
             FormSuccess res -> res
-            _ -> ParticipantList {carCustom = []}
+            FormFailure e -> ParticipantList {carCustom = e}
+            FormMissing -> ParticipantList {carCustom = ["missing1","missing2"]}
+    matches <- liftIO $ randomMatch participants
+        
 
     defaultLayout $ do
         aDomId <- newIdent

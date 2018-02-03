@@ -1,0 +1,27 @@
+
+
+
+$(document).ready(function() {
+    var wrapper         = $(".participant_input_wrapper"); //Fields wrapper
+    var add_button      = $(".add_field_button"); //Add button ID
+    $(".participant_input_proto:first").hide()
+
+    var init_n_fields = 5
+    for (i=0; i < init_n_fields; i++) {
+        add_participant_input();
+    }   
+
+
+    function add_participant_input() {
+        $(wrapper).append( $(".participant_input_proto:first").clone().removeClass("participant_input_proto").show());
+    }
+
+    $(add_button).click(function(e){ //on add input button click
+        e.preventDefault();
+        add_participant_input();
+    });
+   
+    $(wrapper).on("click",".remove_field", function(e){ //user click on remove text
+        e.preventDefault(); $(this).parent('span').remove();
+    })
+});
