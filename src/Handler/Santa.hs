@@ -37,10 +37,11 @@ santaField = Field
             _          -> return $ Left "You must enter at least two participants"
     , fieldView = \_idAttr nameAttr otherAttrs _eResult _isReq ->
         [whamlet|
-            <div .participant_input_wrapper .table .table-striped .table-bordered .table-highlight>
+            <div .participant_input_wrapper .table .table-striped>
                 <span .form-group .tr .participant_input_proto style="display:none">
-                    <input name=#{nameAttr} *{otherAttrs} type=text .td>
-                    <span .remove_field .glyphicon .glyphicon-remove>
+                    <span .td .col-md-2>Name: 
+                    <input name=#{nameAttr} *{otherAttrs} type=text .td .col-md-9>
+                    <span .remove_field .glyphicon .glyphicon-remove .td .col-md-1>
         |] 
     , fieldEnctype = UrlEncoded
     }

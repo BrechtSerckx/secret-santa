@@ -1,34 +1,30 @@
 <div .jumbotron>
-    <div .container>
-        <div .row>
-            <h1 .header>
-                Secret Santa
-            <h2>
-                Match up with your friends
+    <h1 .header>
+        Secret Santa
+    <p .lead>
+        Match up with your friends
 
 <div .container>
     <!-- Starting
         ================================================== -->
-    <div .bs-docs-section>
-        <div .row>
-            <div .col-lg-12>
-                <div .page-header>
-                    <h1 #start>Participants
+    <div .row>
+        <div .col-lg-12>
+            <div .page-header>
+                <h1 #start>Participants
 
-    <div .bs-docs-section>
-        <div .row>
-            <div .col-lg-12>
-                <div .bs-callout bs-callout-info well>
-                    $if null participants
-                        <p>No participants!
-                    $else
-                        <table .table .table-striped> 
+    <div .row>
+        <div .col-lg-12>
+            <div .well>
+                $if null participants
+                    <p>No participants!
+                $else
+                    <table .table .table-striped> 
+                        <tr>
+                            <th .col-md-5 .text-left>Participant
+                            <th .col-md-2 .text-center>is Secret Santa for
+                            <th .col-md-5 .text-right>Match
+                        $forall (p,m) <- matches
                             <tr>
-                                <th>Participant
-                                <th>is Secret Santa for
-                                <th>Match
-                            $forall (p,m) <- matches
-                                <tr>
-                                    <td>#{p}
-                                    <td>-->
-                                    <td>#{m}
+                                <td .text-left>#{p}
+                                <td .text-center>-->
+                                <td .text-right>#{m}

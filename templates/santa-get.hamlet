@@ -1,5 +1,5 @@
 <div .jumbotron>
-    <h1 .header>
+    <h1 .page-header>
         Secret Santa
     <p .lead>
         Match up with your friends
@@ -7,19 +7,18 @@
 <div .container>
     <!-- Starting
         ================================================== -->
-    <div .bs-docs-section>
-        <div .row>
-            <div .col-lg-12>
-                <div .page-header>
-                    <h1 #start>
-                        Secret Santa
-                    <p>
-                        Please fill in the participant names.
-        <div .row>
-            <div .col-lg-12>
-                <div .bs-callout bs-callout-info well>
-                    <form method=post action=@{SantaR}#forms enctype=#{formEnctype} .form-horizontal>
-                        ^{formWidget}
-                        <button type=button .add_field_button .btn>Add More
-                        <button .btn.btn-primary type="submit">
-                            Match!
+    <div .row>
+        <div .col-lg-12>
+            <div .page-header>
+                <h1 #start>
+                    Secret Santa
+                <p>
+                    Please fill in the participant names.
+    <div .row>
+        <div .col-lg-12>
+            <div .well>
+                <form method=post action=@{SantaR}#forms enctype=#{formEnctype} .form-horizontal>
+                    ^{formWidget}
+                    <button type=button .add_field_button .btn>Add More
+                    <button .btn.btn-primary type="submit">
+                        Match!
