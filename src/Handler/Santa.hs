@@ -8,6 +8,7 @@ module Handler.Santa where
 
 import Import
 import Yesod.Form.Bootstrap3
+import SecretSanta (randomMatch, shuffle)
 
 data ParticipantList = ParticipantList
     { carCustom  :: [Text]
@@ -59,7 +60,7 @@ getSantaR = do
 postSantaR :: Handler Html
 postSantaR = do
     ((result, formWidget), formEnctype) <- runFormPost santaForm
-    let participants = carCustom $ case result of
+    participants <- liftIO $ shuffle $ carCustom $ case result of
             FormSuccess res -> res
             _ -> ParticipantList {carCustom = []}
 
