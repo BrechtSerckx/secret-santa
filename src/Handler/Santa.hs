@@ -11,15 +11,12 @@ import Yesod.Form.Bootstrap3
 import SecretSanta (randomMatch)
 import Data.List (nub)
 
-data ParticipantList = ParticipantList
-    { carCustom  :: [Text]
-    } deriving Show
+type ParticipantList = [Text]
 
 
 
 santaAForm :: AForm Handler ParticipantList
-santaAForm = ParticipantList
-    <$> areq santaField "Participants" Nothing
+santaAForm = areq santaField "Participants" Nothing
 
 
 santaForm :: Html -> MForm Handler (FormResult ParticipantList, Widget)
@@ -61,10 +58,10 @@ postSantaR :: Handler Html
 postSantaR = do
     ((result, _formWidget), _formEnctype) <- runFormPost santaForm
 
-    let participants = carCustom $ case result of
+    let participants = case result of
             FormSuccess res -> res
-            FormFailure e -> ParticipantList {carCustom = e}
-            FormMissing -> ParticipantList {carCustom = ["missing1","missing2"]}
+            FormFailure e -> e
+            FormMissing -> ["missing1","missing2"]
     matches <- liftIO $ randomMatch participants
         
 
