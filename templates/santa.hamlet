@@ -1,5 +1,5 @@
 <div .jumbotron>
-    <h1 .header>
+    <h1 .page-header>
         Secret Santa
     <p .lead>
         Match up with your friends
@@ -10,9 +10,11 @@
     <div .row>
         <div .col-lg-12>
             <div .page-header>
-                <h1 #start>Participants
-
+                <h1 #start>
+                    Secret Santa
+                <p>
+                    ^{infoWidget}
     <div .row>
         <div .col-lg-12>
             <div .well>
-                ^{matchWidget}
+                ^{bodyWidget}

@@ -45,7 +45,7 @@ validateSantaField :: [Text] -> Either (SomeMessage (HandlerSite Handler)) (Mayb
 validateSantaField ps 
     | length (nub ps') < 2          = Left $ "You must enter at least two unique participants!"
     | length (nub ps') < length ps' = Left $ "Your participants must have unique names!"
-    | otherwise                     = Right $ Just ps
+    | otherwise                     = Right $ Just ps'
         where ps' = filter (/= "") ps
                             
 
@@ -54,15 +54,31 @@ validateSantaField ps
 getSantaR :: Handler Html
 getSantaR = do
     (formWidget, formEnctype) <- generateFormPost santaForm
+    let infoWidget = [whamlet|
+        Please fill in the participant names.
+        |]
+
+    let bodyWidget = [whamlet|
+        <form method=post action=@{SantaR}#forms enctype=#{formEnctype} .form-horizontal>
+            ^{formWidget}
+            <button type=button .add_field_button .btn>Add More
+            <button .btn.btn-primary type="submit">
+                Match!
+        |]
     defaultLayout $ do
         aDomId <- newIdent
         setTitle "Secret Santa - BrechtSerckx.be"
-        $(widgetFile "santa-get")
+        $(widgetFile "santa")
+
 
 postSantaR :: Handler Html
 postSantaR = do
     ((result, _formWidget), _formEnctype) <- runFormPost santaForm
-    let matchWidget = case result of
+    let infoWidget = [whamlet|
+        Secret Santa generated your matches!
+        |]
+
+    let bodyWidget = case result of
             FormSuccess participants -> do
                 matches <- liftIO $ randomMatch participants
                 [whamlet|
@@ -85,9 +101,9 @@ postSantaR = do
             FormMissing -> [whamlet|
                 <p>Error: missing form!
                 |]
-        
+
     defaultLayout $ do
         aDomId <- newIdent
         setTitle "Secret Santa - BrechtSerckx.be"
-        $(widgetFile "santa-post")
+        $(widgetFile "santa")
 
