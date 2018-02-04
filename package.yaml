@@ -43,6 +43,7 @@ dependencies:
 - wai
 - foreign-store
 - random
+- mime-mail
 - smtp-mail
 
 # The library contains all of our application code. The executable
@@ -56,12 +57,14 @@ library:
       - -Wall
       - -fwarn-tabs
       - -O0
+      - -Wunused-matches
       cpp-options: -DDEVELOPMENT
     else:
       ghc-options:
       - -Wall
       - -fwarn-tabs
       - -O2
+      - -Wunused-matches
 
 # Runnable executable for our application
 executables:

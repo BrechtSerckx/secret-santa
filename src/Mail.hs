@@ -1,11 +1,13 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Mail where
 
+import Network.Mail.Mime (Mail, Part,Address)
+import Network.Mail.SMTP (sendMailWithLogin', plainTextPart, simpleMail)
+import Network.Mail.SMTP.Auth (UserName)
+import Network.Mail.SMTP.Types 
+import Data.Text.Lazy (Text)
 
-
-
-import Network.Mail.SMTP
-
-from = Address (Just "Secret Santa") user
+from = Address (Just "Secret Santa" ) "brecht_serckx@gmail.com" 
 cc = []
 bcc = []
 subject = "Your Secret Santa Match"
@@ -17,10 +19,13 @@ user = "brecht.serckx@gmail.com"
 pass = "secret_password"
 
 
-mkBody participant match = "Dear " ++ show participant ++ ", you are Secret Santa for " ++ show match ++ "!"
+mkBody :: Text -> Text -> Part
+mkBody participant match = plainTextPart $ 
+    "Dear  ++ participant ++ , you are Secret Santa for *match*!"
 
 mkMail to participant match = simpleMail from to cc bcc subject [body]
     where
         body = mkBody participant match
 
-sendGmail mail = sendMailWithLogin' host port user pass mail
+sendGmail :: Mail -> IO ()
+sendGmail mail = sendMailWithLogin' host port_tls user pass mail
