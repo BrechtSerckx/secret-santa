@@ -28,10 +28,7 @@ santaForm = renderBootstrap3 bh santaAForm
 
 santaField :: Field Handler [Text]
 santaField = Field
-    { fieldParse = \rawVals _fileVals ->
-        case rawVals of
-            ps@(_:_:_) -> return $ Right $ Just $ nub . filter (/= "") $ ps
-            _          -> return $ Left "You must enter at least two participants"
+    { fieldParse = \rawVals _fileVals -> return $ validateSantaField rawVals
     , fieldView = \_idAttr nameAttr otherAttrs _eResult _isReq ->
         [whamlet|
             <div .participant_input_wrapper .table .table-striped>
@@ -43,6 +40,14 @@ santaField = Field
     , fieldEnctype = UrlEncoded
     }
 
+
+validateSantaField :: [Text] -> Either (SomeMessage (HandlerSite Handler)) (Maybe [Text])
+validateSantaField ps 
+    | length (nub ps') < 2          = Left $ "You must enter at least two unique participants!"
+    | length (nub ps') < length ps' = Left $ "Your participants must have unique names!"
+    | otherwise                     = Right $ Just ps
+        where ps' = filter (/= "") ps
+                            
 
 
 
@@ -57,15 +62,32 @@ getSantaR = do
 postSantaR :: Handler Html
 postSantaR = do
     ((result, _formWidget), _formEnctype) <- runFormPost santaForm
-
-    let participants = case result of
-            FormSuccess res -> res
-            FormFailure e -> e
-            FormMissing -> ["missing1","missing2"]
-    matches <- liftIO $ randomMatch participants
+    let matchWidget = case result of
+            FormSuccess participants -> do
+                matches <- liftIO $ randomMatch participants
+                [whamlet|
+                    <table .table .table-striped> 
+                        <tr>
+                            <th .col-md-5 .text-left>Participant
+                            <th .col-md-2 .text-center>is Secret Santa for
+                            <th .col-md-5 .text-right>Match
+                        $forall (p,m) <- matches
+                            <tr>
+                                <td .text-left>#{p}
+                                <td .text-center>-->
+                                <td .text-right>#{m}
+                    |]
+            FormFailure es -> [whamlet|
+                <ul>
+                    $forall e <- es
+                        <li>#{e}
+                |]
+            FormMissing -> [whamlet|
+                <p>Error: missing form!
+                |]
         
-
     defaultLayout $ do
         aDomId <- newIdent
         setTitle "Secret Santa - BrechtSerckx.be"
         $(widgetFile "santa-post")
+
