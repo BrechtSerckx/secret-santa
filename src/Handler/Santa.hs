@@ -8,6 +8,7 @@ module Handler.Santa where
 
 import Import
 import Yesod.Form.Bootstrap3
+import Yesod.Form.MassInput (inputList)
 import SecretSanta (randomMatch)
 import Data.List (nub)
 

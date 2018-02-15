@@ -9,5 +9,6 @@
 /       HomeR GET POST
 
 /santa SantaR GET POST
+/santa-test SantaTestR GET 
 
 /comments CommentR POST
