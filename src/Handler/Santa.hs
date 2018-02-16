@@ -6,25 +6,36 @@
 {-# LANGUAGE QuasiQuotes #-}
 module Handler.Santa where
 
-import Import
+import Import hiding (count)
 import Yesod.Form.Bootstrap3
-import Yesod.Form.MassInput (inputList)
 import SecretSanta (randomMatch)
 import Data.List (nub)
+
+
 
 type ParticipantList = [Text]
 
 
-
-santaAForm :: AForm Handler ParticipantList
-santaAForm = areq santaField "Participants" Nothing
-
-
-santaForm :: Html -> MForm Handler (FormResult ParticipantList, Widget)
-santaForm = renderBootstrap3 bh santaAForm
-    where
-        bh = BootstrapBasicForm
-
+multiForm :: Html -> MForm Handler (FormResult (ParticipantList,Int), Widget)
+multiForm html = do
+    let countFieldSettings = FieldSettings { fsLabel = ""
+                                           , fsTooltip = Nothing
+                                           , fsId = Nothing
+                                           , fsName = Nothing
+                                           , fsAttrs = [("class", "count_input")]
+                                           }
+    (res, widget) <- flip (renderBootstrap3 BootstrapBasicForm) html $ (,)
+            <$> areq santaField "Santa" Nothing
+            <*> areq intField countFieldSettings (Just 2)
+    return $ case res of
+              FormSuccess (ps, count)
+                        | length (nub ps) /= count ->
+                      let msg = "Invalid participant count"
+                       in (FormFailure [msg], [whamlet|
+                  <p .errors>#{msg}
+                  ^{widget}
+                  |])
+              _ -> (res, widget)
 
 
 santaField :: Field Handler [Text]
@@ -33,7 +44,7 @@ santaField = Field
     , fieldView = \_idAttr nameAttr otherAttrs _eResult _isReq ->
         [whamlet|
             <div .participant_input_wrapper .table .table-striped>
-                <span .form-group .tr .participant_input_proto style="display:none">
+                <span .form-group .tr .participant_input_proto>
                     <span .td .col-md-2>Name: 
                     <input name=#{nameAttr} *{otherAttrs} type=text .td .col-md-9>
                     <span .remove_field .glyphicon .glyphicon-remove .td .col-md-1>
@@ -51,10 +62,9 @@ validateSantaField ps
                             
 
 
-
 getSantaR :: Handler Html
 getSantaR = do
-    (formWidget, formEnctype) <- generateFormPost santaForm
+    (formWidget, formEnctype) <- generateFormPost multiForm
     let infoWidget = [whamlet|
         Please fill in the participant names.
         |]
@@ -74,13 +84,13 @@ getSantaR = do
 
 postSantaR :: Handler Html
 postSantaR = do
-    ((result, _formWidget), _formEnctype) <- runFormPost santaForm
+    ((result, _formWidget), _formEnctype) <- runFormPost multiForm
     let infoWidget = [whamlet|
         Secret Santa generated your matches!
         |]
 
     let bodyWidget = case result of
-            FormSuccess participants -> do
+            FormSuccess (participants,_) -> do
                 matches <- liftIO $ randomMatch participants
                 [whamlet|
                     <table .table .table-striped> 
@@ -107,4 +117,3 @@ postSantaR = do
         aDomId <- newIdent
         setTitle "Secret Santa - BrechtSerckx.be"
         $(widgetFile "santa")
-
