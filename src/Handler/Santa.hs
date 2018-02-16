@@ -6,10 +6,10 @@
 {-# LANGUAGE QuasiQuotes #-}
 module Handler.Santa where
 
-import Import hiding (count)
+import Import hiding (count,tail)
 import Yesod.Form.Bootstrap3
 import SecretSanta (randomMatch)
-import Data.List (nub)
+import Data.List (nub,tail)
 
 
 
@@ -40,7 +40,7 @@ multiForm html = do
 
 santaField :: Field Handler [Text]
 santaField = Field
-    { fieldParse = \rawVals _fileVals -> return $ validateSantaField rawVals
+    { fieldParse = \rawVals _fileVals -> return $ validateSantaField $ tail rawVals
     , fieldView = \_idAttr nameAttr otherAttrs _eResult _isReq ->
         [whamlet|
             <div .participant_input_wrapper .table .table-striped>
