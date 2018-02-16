@@ -2,27 +2,35 @@
 
 
 $(document).ready(function() {
+    var prototype       = $(".participant_input_proto:first");
     var wrapper         = $(".participant_input_wrapper"); 
     var add_button      = $(".add_field_button"); 
-    $(".participant_input_proto:first").hide()
+    var count_input     = $(".count_input");
+    var count_field     = count_input.parent('div');
+    prototype.hide();
+    count_field.hide();
 
-    var init_n_fields = 5
+    var init_n_fields = Number(count_input.val());
+    
     for (i=0; i < init_n_fields; i++) {
         add_participant_input();
     }   
 
 
     function add_participant_input() {
-        $(wrapper).append( $(".participant_input_proto:first").clone().removeClass("participant_input_proto").show());
+        $(wrapper).append( prototype.clone().removeClass("participant_input_proto").show());
     }
+    
 
     $(add_button).click(function(e){ 
         e.preventDefault();
         add_participant_input();
+        $(count_input).val(Number($(count_input).val()) + 1);
     });
    
     $(wrapper).on("click",".remove_field", function(e){ 
         e.preventDefault(); 
-		$(this).parent('span').remove();
-    })
+        $(this).parent('span').remove();
+        $(count_input).val(Number($(count_input).val()) - 1);
+    });
 });
