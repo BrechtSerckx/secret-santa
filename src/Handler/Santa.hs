@@ -7,20 +7,21 @@
 {-# LANGUAGE EmptyCase #-}
 module Handler.Santa where
 
-import Import hiding (count,tail)
+import Import hiding (count,tail,trace)
 import SecretSanta (randomMatch)
 import Data.List (nub,tail)
-
+import Debug.Trace (trace)
 
 type Participant = (Text,Text)
-type SantaInput = [Participant]
+data SantaData = SantaData {
+    participants :: [Participant]
+    } deriving (Show,Eq)
 
 
-multiForm :: Html -> MForm Handler (FormResult SantaInput, Widget)
+multiForm :: Html -> MForm Handler (FormResult SantaData, Widget)
 multiForm extra = do
     (namesRes, namesView) <- mreq (multiField "Name") "Names" Nothing
     (emailsRes, emailsView) <- mreq (multiField "Email") "Emails" Nothing
-    let personRes = zip <$> namesRes <*> emailsRes
     let widget = do
             toWidget
                 [lucius||]
@@ -32,36 +33,37 @@ multiForm extra = do
                         ^{fvInput emailsView}
                         <span .remove_field .glyphicon .glyphicon-remove .td .col-md-1>
             |]
-    return (personRes, widget)
+    let res = case mkSantaData <$> namesRes <*> emailsRes of
+            FormSuccess (Right santaData) -> FormSuccess $ trace (show santaData) santaData
+            FormSuccess (Left es)         -> FormFailure es
+            _                             -> res
+    return (res, widget)
+
+mkSantaData :: [Text] -> [Text] -> Either [Text] SantaData
+mkSantaData names emails
+    | length (nub names) < length names = Left $ return "Your participants must have unique names!"
+    | length (nub names) < 2            = Left $ return "You must enter at least two unique participants!"
+    | otherwise                         = es
+        where
+            ps = map mkParticipant 
+                    . filter (\(name,email) -> name /= "" || email /= "") 
+                    $ zip names emails
+            es = case lefts ps of
+                []  -> Right $ SantaData $ rights $ ps
+                _   -> Left $ lefts ps
 
 
-{--
-multiFormOld :: Html -> MForm Handler (FormResult (ParticipantList,Int), Widget)
-multiFormOld html = do
-    let countFieldSettings = FieldSettings { fsLabel = ""
-                                           , fsTooltip = Nothing
-                                           , fsId = Nothing
-                                           , fsName = Nothing
-                                           , fsAttrs = [("class", "count_input")]
-                                           }
-    (res, widget) <- flip (renderBootstrap3 BootstrapBasicForm) html $ (,)
-            <$> areq multiField "Santa" Nothing
-            <*> areq intField countFieldSettings (Just 2)
-    return $ case res of
-              FormSuccess (ps, count)
-                        | length (nub ps) /= count ->
-                      let msg = "Invalid participant count"
-                       in (FormFailure [msg], [whamlet|
-                  <p .errors>#{msg}
-                  ^{widget}
-                  |])
-              _ -> (res, widget)
---}
+mkParticipant :: (Text,Text) -> Either Text Participant
+mkParticipant (name,email)
+    | name == ""    = Left $ "Name cannot be empty!"
+    | email == ""   = Left $ "Email cannot be empty!"
+    | otherwise     = Right (name,email)
+
 
 
 multiField :: Text -> Field Handler [Text]
 multiField label = Field
-    { fieldParse = \rawVals _fileVals -> return $ validateSantaField $ tail rawVals
+    { fieldParse = \rawVals _fileVals -> return $ Right $ Just $ tail rawVals
     , fieldView = \_idAttr nameAttr otherAttrs _eResult _isReq ->
         [whamlet|
                     <span .td .col-md-1>#{label}: 
@@ -69,15 +71,6 @@ multiField label = Field
         |] 
     , fieldEnctype = UrlEncoded
     }
-
-
-validateSantaField :: [Text] -> Either (SomeMessage (HandlerSite Handler)) (Maybe [Text])
-validateSantaField ps 
-    | length (nub ps') < 2          = Left $ "You must enter at least two unique participants!"
-    | length (nub ps') < length ps' = Left $ "Your participants must have unique names!"
-    | otherwise                     = Right $ Just ps'
-        where ps' = filter (/= "") ps
-                            
 
 
 getSantaR :: Handler Html
@@ -113,7 +106,7 @@ postSantaR = do
 
     let bodyWidget = case result of
             FormSuccess ps -> do
-                matches <- liftIO $ randomMatch ps
+                matches <- liftIO $ randomMatch $ participants $ ps
                 [whamlet|
                     <table .table .table-striped> 
                         <tr>
