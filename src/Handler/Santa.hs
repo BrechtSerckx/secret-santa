@@ -12,12 +12,11 @@ import SecretSanta (randomMatch)
 import Data.List (nub,tail)
 
 
+type Participant = (Text,Text)
+type SantaInput = [Participant]
 
-type ParticipantList = [(Text,Text)]
 
-type PList = [(Text,Text)]
-
-multiForm :: Html -> MForm Handler (FormResult PList, Widget)
+multiForm :: Html -> MForm Handler (FormResult SantaInput, Widget)
 multiForm extra = do
     (namesRes, namesView) <- mreq (multiField "Name") "Names" Nothing
     (emailsRes, emailsView) <- mreq (multiField "Email") "Emails" Nothing
