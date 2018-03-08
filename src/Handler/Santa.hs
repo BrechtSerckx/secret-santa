@@ -14,37 +14,12 @@ import Data.List (nub,tail)
 
 type ParticipantList = [(Text,Text)]
 
-{--
-multiForm :: Html -> MForm Handler (FormResult (ParticipantList,Int), Widget)
-multiForm html = do
-    (usersRes, usersView) <- mreq multiField "Users" Nothing
-    (emailsRes, emailsView) <- mreq multiField "Emails" Nothing
-    let participantsRes = zip <$> usersRes <*> emailsRes
-    let widget = do
-        toWidget
-            [lucius|
-                ##{fvId emailsView} {
-                    width: 3em;
-                }
-            |]
-            [whamlet|
-                #{html}
-                <p>
-                    Hello, my name is #
-                    ^{fvInput usersView}
-                    \ and I am #
-                    ^{fvInput emailsView}
-                    \ years old. #
-                    <input type=submit value="Introduce myself">
-            |]
-        return (participantsRes, widget)
---}
 type PList = [(Text,Text)]
 
-personForm :: Html -> MForm Handler (FormResult PList, Widget)
-personForm extra = do
-    (namesRes, namesView) <- mreq multiField "Names" Nothing
-    (emailsRes, emailsView) <- mreq multiField "Emails" Nothing
+multiForm :: Html -> MForm Handler (FormResult PList, Widget)
+multiForm extra = do
+    (namesRes, namesView) <- mreq (multiField "Name") "Names" Nothing
+    (emailsRes, emailsView) <- mreq (multiField "Email") "Emails" Nothing
     let personRes = zip <$> namesRes <*> emailsRes
     let widget = do
             toWidget
@@ -55,13 +30,11 @@ personForm extra = do
                 |]
             [whamlet|
                 #{extra}
-                <p>
-                    Hello, my name is #
-                    ^{fvInput namesView}
-                    \ and I am #
-                    ^{fvInput emailsView}
-                    \ years old. #
-                    <input type=submit value="Introduce myself">
+                <div .participant_input_wrapper .table .table-striped>
+                    <span .form-group .tr .participant_input_proto>
+                        ^{fvInput namesView}
+                        ^{fvInput emailsView}
+                        <span .remove_field .glyphicon .glyphicon-remove .td .col-md-1>
             |]
     return (personRes, widget)
 
@@ -90,16 +63,13 @@ multiFormOld html = do
 --}
 
 
-multiField :: Field Handler [Text]
-multiField = Field
+multiField :: Text -> Field Handler [Text]
+multiField label = Field
     { fieldParse = \rawVals _fileVals -> return $ validateSantaField $ tail rawVals
     , fieldView = \_idAttr nameAttr otherAttrs _eResult _isReq ->
         [whamlet|
-            <div .participant_input_wrapper .table .table-striped>
-                <span .form-group .tr .participant_input_proto>
-                    <span .td .col-md-2>Name: 
-                    <input name=#{nameAttr} *{otherAttrs} type=text .td .col-md-9>
-                    <span .remove_field .glyphicon .glyphicon-remove .td .col-md-1>
+                    <span .td .col-md-1>#{label}: 
+                    <input name=#{nameAttr} *{otherAttrs} type=text .td .col-md-4>
         |] 
     , fieldEnctype = UrlEncoded
     }
@@ -116,7 +86,7 @@ validateSantaField ps
 
 getSantaR :: Handler Html
 getSantaR = do
-    (formWidget, formEnctype) <- generateFormPost personForm
+    (formWidget, formEnctype) <- generateFormPost multiForm
     let infoWidget = [whamlet|
         Please fill in the participant names.
         |]
@@ -136,7 +106,7 @@ getSantaR = do
 
 postSantaR :: Handler Html
 postSantaR = do
-    ((result, _formWidget), _formEnctype) <- runFormPost personForm
+    ((result, _formWidget), _formEnctype) <- runFormPost multiForm
     let infoWidget = [whamlet|
         Secret Santa generated your matches!
         |]
