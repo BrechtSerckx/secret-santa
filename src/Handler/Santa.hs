@@ -4,6 +4,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE EmptyCase #-}
 module Handler.Santa where
 
 import Import hiding (count,tail)
@@ -23,11 +24,7 @@ multiForm extra = do
     let personRes = zip <$> namesRes <*> emailsRes
     let widget = do
             toWidget
-                [lucius|
-                    ##{fvId emailsView} {
-                        width: 3em;
-                    }
-                |]
+                [lucius||]
             [whamlet|
                 #{extra}
                 <div .participant_input_wrapper .table .table-striped>
@@ -107,9 +104,13 @@ getSantaR = do
 postSantaR :: Handler Html
 postSantaR = do
     ((result, _formWidget), _formEnctype) <- runFormPost multiForm
-    let infoWidget = [whamlet|
-        Secret Santa generated your matches!
-        |]
+    let infoWidget = case result of 
+            FormSuccess _ -> [whamlet|
+                Secret Santa generated your matches!
+                |]
+            _             -> [whamlet|
+                Error
+                |]
 
     let bodyWidget = case result of
             FormSuccess ps -> do
