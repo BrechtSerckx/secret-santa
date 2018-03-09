@@ -7,7 +7,7 @@ import Network.Mail.SMTP.Auth (UserName)
 import Network.Mail.SMTP.Types 
 import Data.Text.Lazy (Text)
 
-from = Address (Just "Secret Santa" ) "brecht_serckx@gmail.com" 
+from = Address (Just "Secret Santa" ) "from_email@mail.com" 
 cc = []
 bcc = []
 subject = "Your Secret Santa Match"
@@ -15,7 +15,7 @@ subject = "Your Secret Santa Match"
 host = "smtp.google.com"
 port_tls = 587
 port_ssl = 465
-user = "***REMOVED***"
+user = "username@mail.com"
 pass = "secret_password"
 
 
