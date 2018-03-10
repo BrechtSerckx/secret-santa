@@ -1,31 +1,66 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable         #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE GADTs                      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE QuasiQuotes                #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE TypeFamilies               #-}
 module Mail where
 
-import Network.Mail.Mime (Mail, Part,Address)
-import Network.Mail.SMTP (sendMailWithLogin', plainTextPart, simpleMail)
-import Network.Mail.SMTP.Auth (UserName)
-import Network.Mail.SMTP.Types 
-import Data.Text.Lazy (Text)
+import           Network.Mail.Mime  hiding (htmlPart)
+import           Text.Blaze.Html.Renderer.Utf8 (renderHtml)
+import           Import
+import           Text.Shakespeare.Text (stext)
+import qualified Data.Text.Lazy.Encoding
 
-from = Address (Just "Secret Santa" ) "from_email@mail.com" 
+from = Address (Just "Secret Santa" ) "secret-santa@secret-santa.net" 
 cc = []
 bcc = []
 subject = "Your Secret Santa Match"
 
-host = "smtp.google.com"
-port_tls = 587
-port_ssl = 465
-user = "username@mail.com"
-pass = "secret_password"
 
+sendMail :: Mail -> IO ()
+sendMail = renderSendMail 
 
-mkBody :: Text -> Text -> Part
-mkBody participant match = plainTextPart $ 
-    "Dear  ++ participant ++ , you are Secret Santa for *match*!"
-
-mkMail to participant match = simpleMail from to cc bcc subject [body]
+mkMail :: Text -> Text -> Text -> Mail
+mkMail to participant match = (emptyMail $ from)
+        { mailTo = [Address Nothing to]
+        , mailHeaders =
+            [ ("Subject", subject)
+            ]
+        , mailParts = [[textPart, htmlPart]]
+        }
     where
-        body = mkBody participant match
+        textPart = mkTextPart participant match
+        htmlPart = mkHtmlPart participant match
 
-sendGmail :: Mail -> IO ()
-sendGmail mail = sendMailWithLogin' host port_tls user pass mail
+mkTextPart :: Text -> Text -> Part
+mkTextPart participant match = Part
+    { partType = "text/plain; charset=utf-8"
+    , partEncoding = None
+    , partFilename = Nothing
+    , partContent = Data.Text.Lazy.Encoding.encodeUtf8
+        [stext|
+            Hi #{participant}
+            You are Secret Santa for: #{match}!
+        |]
+    , partHeaders = []
+    }
+
+mkHtmlPart :: Text -> Text -> Part
+mkHtmlPart participant match = Part
+    { partType = "text/html; charset=utf-8"
+    , partEncoding = None
+    , partFilename = Nothing
+    , partContent = renderHtml
+        [shamlet|
+            <p>Hi #{participant}
+            <p>You are Secret Santa for: <b>#{match}<\b>!
+        |]
+    , partHeaders = []
+    }
+
+
