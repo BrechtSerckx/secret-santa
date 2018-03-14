@@ -43,7 +43,7 @@ multiForm extra = do
             _                             -> res
     return (res, widget)
 
-mkSantaData :: [Text] -> [Address] -> Either [Text] SantaData
+mkSantaData :: [Text] -> [Text] -> Either [Text] SantaData
 mkSantaData names emails
     | length (nub names) < length names = Left $ return "Your participants must have unique names!"
     | length (nub names) < 2            = Left $ return "You must enter at least two unique participants!"
@@ -57,11 +57,11 @@ mkSantaData names emails
                 _   -> Left $ lefts ps
 
 
-mkParticipant :: (Text,Address) -> Either Text Participant
+mkParticipant :: (Text,Text) -> Either Text Participant
 mkParticipant (name,email)
     | name == ""    = Left $ "Name cannot be empty!"
     | email == ""   = Left $ "Email cannot be empty!"
-    | otherwise     = Right (name,email)
+    | otherwise     = Right (name,Address (Just name) email)
 
 
 
@@ -77,7 +77,7 @@ multiTextField label = Field
     }
 
 
-multiEmailField :: Text -> Field Handler [Address]
+multiEmailField :: Text -> Field Handler [Text]
 multiEmailField label = Field
     { fieldParse = \rawVals _fileVals -> return $ parseEmails rawVals 
     , fieldView = \_id name attrs _eResult _isReq ->
@@ -88,9 +88,9 @@ multiEmailField label = Field
     , fieldEnctype = UrlEncoded
     }
 
-parseEmails :: [Text] -> Either (SomeMessage (HandlerSite Handler)) (Maybe [Address])
+parseEmails :: [Text] -> Either (SomeMessage (HandlerSite Handler)) (Maybe [Text])
 parseEmails es 
-    | any (Email.isValid) es' = Right $ Just $ map (\e -> Address Nothing e) $ tail es
+    | any (Email.isValid) es' = Right $ Just $ tail es
     | otherwise               = Left $ "Invalid email address!"
         where
             es' :: [ByteString]
