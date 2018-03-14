@@ -13,8 +13,10 @@ import Data.List (nub,tail)
 import Debug.Trace (trace)
 import qualified Text.Email.Validate as Email
 import qualified Data.ByteString.Char8 as BS
+import           Network.Mail.Mime
+import Mail      (sendMail,mkMail)
 
-type Participant = (Text,Text)
+type Participant = (Text,Address)
 data SantaData = SantaData {
     participants :: [Participant]
     } deriving (Show,Eq)
@@ -41,7 +43,7 @@ multiForm extra = do
             _                             -> res
     return (res, widget)
 
-mkSantaData :: [Text] -> [Text] -> Either [Text] SantaData
+mkSantaData :: [Text] -> [Address] -> Either [Text] SantaData
 mkSantaData names emails
     | length (nub names) < length names = Left $ return "Your participants must have unique names!"
     | length (nub names) < 2            = Left $ return "You must enter at least two unique participants!"
@@ -55,7 +57,7 @@ mkSantaData names emails
                 _   -> Left $ lefts ps
 
 
-mkParticipant :: (Text,Text) -> Either Text Participant
+mkParticipant :: (Text,Address) -> Either Text Participant
 mkParticipant (name,email)
     | name == ""    = Left $ "Name cannot be empty!"
     | email == ""   = Left $ "Email cannot be empty!"
@@ -75,7 +77,7 @@ multiTextField label = Field
     }
 
 
-multiEmailField :: Text -> Field Handler [Text]
+multiEmailField :: Text -> Field Handler [Address]
 multiEmailField label = Field
     { fieldParse = \rawVals _fileVals -> return $ parseEmails rawVals 
     , fieldView = \_id name attrs _eResult _isReq ->
@@ -86,10 +88,10 @@ multiEmailField label = Field
     , fieldEnctype = UrlEncoded
     }
 
-parseEmails :: [Text] -> Either (SomeMessage (HandlerSite Handler)) (Maybe [Text])
+parseEmails :: [Text] -> Either (SomeMessage (HandlerSite Handler)) (Maybe [Address])
 parseEmails es 
-    | any (Email.isValid) es' = Right $ Just $ tail es
-    | otherwise               = Left "Invalid Email"
+    | any (Email.isValid) es' = Right $ Just $ map (\e -> Address Nothing e) $ tail es
+    | otherwise               = Left $ "Invalid email address!"
         where
             es' :: [ByteString]
             es' = map (BS.pack . unpack) es
@@ -129,6 +131,11 @@ getSantaR = do
 postSantaR :: Handler Html
 postSantaR = do
     ((result, _formWidget), _formEnctype) <- runFormPost multiForm
+    case result of 
+        FormSuccess ps -> do
+            matches <- liftIO $ randomMatch $ participants $ ps
+            liftIO $ mapM_ (\((p,e),(m,_)) -> sendMail $ mkMail e p m) matches
+    
     let infoWidget = case result of 
             FormSuccess _ -> [whamlet|
                 Secret Santa generated your matches!

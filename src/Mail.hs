@@ -25,9 +25,9 @@ subject = "Your Secret Santa Match"
 sendMail :: Mail -> IO ()
 sendMail = renderSendMail 
 
-mkMail :: Text -> Text -> Text -> Mail
+mkMail :: Address -> Text -> Text -> Mail
 mkMail to participant match = (emptyMail $ from)
-        { mailTo = [Address Nothing to]
+        { mailTo = [to]
         , mailHeaders =
             [ ("Subject", subject)
             ]
