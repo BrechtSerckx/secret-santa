@@ -7,10 +7,12 @@
 {-# LANGUAGE EmptyCase #-}
 module Handler.Santa where
 
-import Import hiding (count,tail,trace)
+import Import hiding (count,tail,trace,multiEmailField)
 import SecretSanta (randomMatch)
 import Data.List (nub,tail)
 import Debug.Trace (trace)
+import qualified Text.Email.Validate as Email
+import qualified Data.ByteString.Char8 as BS
 
 type Participant = (Text,Text)
 data SantaData = SantaData {
@@ -20,8 +22,8 @@ data SantaData = SantaData {
 
 multiForm :: Html -> MForm Handler (FormResult SantaData, Widget)
 multiForm extra = do
-    (namesRes, namesView) <- mreq (multiField "Name") "Names" Nothing
-    (emailsRes, emailsView) <- mreq (multiField "Email") "Emails" Nothing
+    (namesRes, namesView) <- mreq (multiTextField "Name") "Names" Nothing
+    (emailsRes, emailsView) <- mreq (multiEmailField "Email") "Emails" Nothing
     let widget = do
             toWidget
                 [lucius||]
@@ -61,8 +63,8 @@ mkParticipant (name,email)
 
 
 
-multiField :: Text -> Field Handler [Text]
-multiField label = Field
+multiTextField :: Text -> Field Handler [Text]
+multiTextField label = Field
     { fieldParse = \rawVals _fileVals -> return $ Right $ Just $ tail rawVals
     , fieldView = \_idAttr nameAttr otherAttrs _eResult _isReq ->
         [whamlet|
@@ -72,6 +74,37 @@ multiField label = Field
     , fieldEnctype = UrlEncoded
     }
 
+
+multiEmailField :: Text -> Field Handler [Text]
+multiEmailField label = Field
+    { fieldParse = \rawVals _fileVals -> return $ parseEmails rawVals 
+    , fieldView = \_id name attrs _eResult _isReq ->
+        [whamlet|
+                    <span .td .col-md-1>#{label}: 
+                    <input name=#{name} *{attrs} type=email .td .col-md-4>
+        |] 
+    , fieldEnctype = UrlEncoded
+    }
+
+parseEmails :: [Text] -> Either (SomeMessage (HandlerSite Handler)) (Maybe [Text])
+parseEmails es 
+    | any (Email.isValid) es' = Right $ Just $ tail es
+    | otherwise               = Left "Invalid Email"
+        where
+            es' :: [ByteString]
+            es' = map (BS.pack . unpack) es
+{--
+emailField :: RenderMessage master FormMessage => Field sub master Text
+emailField = Field
+    { fieldParse = blank $
+        \s -> if Email.isValid (unpack s)
+                then Right s
+                else Left $ MsgInvalidEmail s
+    , fieldView = \theId name attrs val isReq -> toWidget [hamlet|
+<input id="#{theId}" name="#{name}" *{attrs} type="email" :isReq:required="" value="#{either id id val}">
+|]
+
+--}
 
 getSantaR :: Handler Html
 getSantaR = do
