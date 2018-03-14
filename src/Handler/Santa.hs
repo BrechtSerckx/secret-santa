@@ -131,44 +131,63 @@ getSantaR = do
 postSantaR :: Handler Html
 postSantaR = do
     ((result, _formWidget), _formEnctype) <- runFormPost multiForm
-    case result of 
-        FormSuccess ps -> do
-            matches <- liftIO $ randomMatch $ participants $ ps
-            liftIO $ mapM_ (\((p,e),(m,_)) -> sendMail $ mkMail e p m) matches
-    
-    let infoWidget = case result of 
-            FormSuccess _ -> [whamlet|
-                Secret Santa generated your matches!
-                |]
-            _             -> [whamlet|
-                Error
-                |]
-
-    let bodyWidget = case result of
-            FormSuccess ps -> do
-                matches <- liftIO $ randomMatch $ participants $ ps
-                [whamlet|
-                    <table .table .table-striped> 
-                        <tr>
-                            <th .col-md-5 .text-left>Participant
-                            <th .col-md-2 .text-center>is Secret Santa for
-                            <th .col-md-5 .text-right>Match
-                        $forall ((p,_),(m,_)) <- matches
-                            <tr>
-                                <td .text-left>#{p}
-                                <td .text-center>-->
-                                <td .text-right>#{m}
-                    |]
-            FormFailure es -> [whamlet|
-                <ul>
-                    $forall e <- es
-                        <li>#{e}
-                |]
-            FormMissing -> [whamlet|
-                <p>Error: missing form!
-                |]
+    (infoWidget,bodyWidget) <- case result of 
+        FormSuccess ps -> postSantaRSuccess ps
+        FormFailure es -> postSantaRFailure es
+        FormMissing    -> postSantaRMissing
 
     defaultLayout $ do
         aDomId <- newIdent
         setTitle "Secret Santa - BrechtSerckx.be"
         $(widgetFile "santa")
+    
+
+
+postSantaRSuccess :: SantaData -> Handler (Widget,Widget)
+postSantaRSuccess santaData = do
+    matches <- liftIO $ randomMatch $ participants $ santaData
+    liftIO $ mapM_ (\((p,e),(m,_)) -> sendMail $ mkMail e p m) matches
+
+    let infoWidget = [whamlet|
+            Secret Santa generated your matches!
+            |]
+
+    let bodyWidget = [whamlet|
+            <table .table .table-striped> 
+                <tr>
+                    <th .col-md-5 .text-left>Participant
+                    <th .col-md-2 .text-center>is Secret Santa for
+                    <th .col-md-5 .text-right>Match
+                $forall ((p,_),(m,_)) <- matches
+                    <tr>
+                        <td .text-left>#{p}
+                        <td .text-center>-->
+                        <td .text-right>#{m}
+            |]
+    return (infoWidget,bodyWidget)
+
+
+postSantaRMissing :: Handler (Widget,Widget)
+postSantaRMissing = do
+    let infoWidget = [whamlet|
+                Error
+                |]
+
+    let bodyWidget = [whamlet|
+                <p>Error: missing form!
+                |]
+    return (infoWidget,bodyWidget)
+
+
+postSantaRFailure :: [Text] -> Handler (Widget,Widget)
+postSantaRFailure es = do
+    let infoWidget = [whamlet|
+                Error
+                |]
+
+    let bodyWidget = [whamlet|
+                <ul>
+                    $forall e <- es
+                        <li>#{e}
+                |]
+    return (infoWidget,bodyWidget)
