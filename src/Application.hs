@@ -43,6 +43,8 @@ import Handler.Comment
 import Handler.MassInputFormTest
 import Handler.MFormTest
 
+import Mail.SendMail
+
 -- This line actually creates our YesodDispatch instance. It is the second half
 -- of the call to mkYesodData which occurs in Foundation.hs. Please see the
 -- comments there for more details.
@@ -61,7 +63,7 @@ makeFoundation appSettings = do
     appStatic <-
         (if appMutableStatic appSettings then staticDevel else static)
         (appStaticDir appSettings)
-
+    let appMailer =  SendMailMailer
     -- Return the foundation
     return App {..}
 

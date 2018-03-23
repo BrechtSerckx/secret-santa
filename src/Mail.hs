@@ -12,9 +12,12 @@ module Mail where
 
 import           Network.Mail.Mime  hiding (htmlPart)
 import           Text.Blaze.Html.Renderer.Utf8 (renderHtml)
-import           Import
+import           Import.NoFoundation
 import           Text.Shakespeare.Text (stext)
 import qualified Data.Text.Lazy.Encoding
+
+class Mailer a where
+    sendMail :: a -> Mail -> IO ()
 
 from = Address (Just "Secret Santa" ) "secret-santa@secret-santa.net" 
 cc = []
@@ -22,8 +25,8 @@ bcc = []
 subject = "Your Secret Santa Match"
 
 
-sendMail :: Mail -> IO ()
-sendMail = renderSendMail 
+--sendMail :: Mail -> IO ()
+--sendMail = renderSendMail 
 
 mkMail :: Address -> Text -> Text -> Mail
 mkMail to participant match = (emptyMail $ from)
