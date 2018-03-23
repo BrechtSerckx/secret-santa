@@ -7,7 +7,7 @@
 {-# LANGUAGE EmptyCase #-}
 module Handler.Santa where
 
-import Import hiding (count,tail,trace,multiEmailField)
+import Import hiding (count,tail,trace,multiEmailField,id)
 import SecretSanta (randomMatch)
 import Data.List (nub,tail)
 import Debug.Trace (trace)
@@ -15,15 +15,29 @@ import qualified Text.Email.Validate as Email
 import qualified Data.ByteString.Char8 as BS
 import           Network.Mail.Mime
 import Mail      (sendMail,mkMail)
+import Data.Either (isLeft)
 
 type Participant = (Text,Address)
-data SantaData = SantaData {
-    participants :: [Participant]
+
+data SantaInfo = SantaInfo
+    { santaDescr :: Text
+    , santaDate  :: Day
+    , santaPrice :: Double
+    } deriving (Show,Eq)
+    
+    
+
+data SantaData = SantaData
+    { santaInfo    :: SantaInfo
+    , participants :: [Participant]
     } deriving (Show,Eq)
 
 
 multiForm :: Html -> MForm Handler (FormResult SantaData, Widget)
 multiForm extra = do
+    (dayRes, dayView) <- mreq dayField "Date: " Nothing
+    (priceRes, priceView) <- mreq doubleField "Price: " $ Just 5
+    (descrRes, descrView) <- mreq textareaField "Description: " $ Just $ Textarea "Enter a description here"
     (namesRes, namesView) <- mreq (multiTextField "Name") "Names" Nothing
     (emailsRes, emailsView) <- mreq (multiEmailField "Email") "Emails" Nothing
     let widget = do
@@ -31,20 +45,56 @@ multiForm extra = do
                 [lucius||]
             [whamlet|
                 #{extra}
+                <h4>
+                <div>
+                    ^{fvLabel descrView}
+                    <br>
+                    ^{fvInput descrView}
+                <br>
+                <div .form-group>
+                    <span>
+                        ^{fvLabel dayView}
+                    <span>
+                        ^{fvInput dayView}
+                <div .form-group>
+                    <span>
+                        ^{fvLabel priceView}
+                    <span>
+                        ^{fvInput priceView}
+                <br>
+                <h4>
+                    Participants:
                 <div .participant_input_wrapper .table .table-striped>
                     <span .form-group .tr .participant_input_proto>
-                        ^{fvInput namesView}
-                        ^{fvInput emailsView}
-                        <span .remove_field .glyphicon .glyphicon-remove .td .col-md-1>
+                        <div .td .col-md-5 >
+                            ^{fvInput namesView}
+                        <div .td .col-md-5 >
+                            ^{fvInput emailsView}
+                        <div .remove_field .glyphicon .glyphicon-remove .td .col-md-2>
             |]
-    let res = case mkSantaData <$> namesRes <*> emailsRes of
+    let infoRes = mkSantaInfo <$> descrRes <*> dayRes <*> priceRes 
+    let psRes = mkSantaParticipants <$> namesRes <*> emailsRes
+    let res = case mkSantaData <$> infoRes <*> psRes of
             FormSuccess (Right santaData) -> FormSuccess $ trace (show santaData) santaData
             FormSuccess (Left es)         -> FormFailure es
             _                             -> res
     return (res, widget)
 
-mkSantaData :: [Text] -> [Text] -> Either [Text] SantaData
-mkSantaData names emails
+
+mkSantaData :: Either [Text] SantaInfo -> Either [Text] [Participant] -> Either [Text] SantaData
+mkSantaData (Left es) _         = Left es
+mkSantaData _         (Left es) = Left es
+mkSantaData (Right info) (Right ps) = Right $ SantaData info ps
+
+
+mkSantaInfo :: Textarea -> Day -> Double -> Either [Text] SantaInfo
+mkSantaInfo descr day price
+    | price < 0 = Left $ return "Price must be positive!"
+    | otherwise = Right $ SantaInfo (unTextarea descr) day price
+    
+
+mkSantaParticipants :: [Text] -> [Text] -> Either [Text] [Participant]
+mkSantaParticipants names emails
     | length (nub names) < length names = Left $ return "Your participants must have unique names!"
     | length (nub names) < 2            = Left $ return "You must enter at least two unique participants!"
     | otherwise                         = es
@@ -52,9 +102,9 @@ mkSantaData names emails
             ps = map mkParticipant 
                     . filter (\(name,email) -> name /= "" || email /= "") 
                     $ zip names emails
-            es = case lefts ps of
-                []  -> Right $ SantaData $ rights $ ps
-                _   -> Left $ lefts ps
+            es 
+                | any (isLeft) ps = Left $ lefts ps
+                | otherwise       = Right $ rights $ ps
 
 
 mkParticipant :: (Text,Text) -> Either Text Participant
@@ -68,10 +118,11 @@ mkParticipant (name,email)
 multiTextField :: Text -> Field Handler [Text]
 multiTextField label = Field
     { fieldParse = \rawVals _fileVals -> return $ Right $ Just $ tail rawVals
-    , fieldView = \_idAttr nameAttr otherAttrs _eResult _isReq ->
+    , fieldView = \id name attrs _eResult _isReq ->
         [whamlet|
-                    <span .td .col-md-1>#{label}: 
-                    <input name=#{nameAttr} *{otherAttrs} type=text .td .col-md-4>
+            <span>
+                <label .control-label for=#{id}>#{label}: 
+                <input .form-control id=#{id} name=#{name} *{attrs} type=text>
         |] 
     , fieldEnctype = UrlEncoded
     }
@@ -80,10 +131,14 @@ multiTextField label = Field
 multiEmailField :: Text -> Field Handler [Text]
 multiEmailField label = Field
     { fieldParse = \rawVals _fileVals -> return $ parseEmails rawVals 
-    , fieldView = \_id name attrs _eResult _isReq ->
+    , fieldView = \id name attrs _eResult _isReq ->
         [whamlet|
-                    <span .td .col-md-1>#{label}: 
-                    <input name=#{name} *{attrs} type=email .td .col-md-4>
+            <span>
+                <label .control-label for=#{id}>#{label}: 
+                <span .input-group>
+                    <span .input-group-addon>
+                        @
+                    <input .form-control id=#{id} name=#{name} *{attrs} type=email>
         |] 
     , fieldEnctype = UrlEncoded
     }
@@ -116,7 +171,7 @@ getSantaR = do
         |]
 
     let bodyWidget = [whamlet|
-        <form method=post action=@{SantaR}#forms enctype=#{formEnctype} .form-horizontal>
+        <form method=post action=@{SantaR}#forms enctype=#{formEnctype} .form-inline>
             ^{formWidget}
             <button type=button .add_field_button .btn>Add More
             <button .btn.btn-primary type="submit">
@@ -146,7 +201,8 @@ postSantaR = do
 postSantaRSuccess :: SantaData -> Handler (Widget,Widget)
 postSantaRSuccess santaData = do
     matches <- liftIO $ randomMatch $ participants $ santaData
-    liftIO $ mapM_ (\((p,e),(m,_)) -> sendMail $ mkMail e p m) matches
+    App { appMailer = mailer} <- getYesod
+    liftIO $ mapM_ (\((p,e),(m,_)) -> sendMail mailer $ mkMail e p m) matches
 
     let infoWidget = [whamlet|
             Secret Santa generated your matches!
