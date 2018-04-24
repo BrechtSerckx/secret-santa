@@ -201,8 +201,9 @@ postSantaR = do
 postSantaRSuccess :: SantaData -> Handler (Widget,Widget)
 postSantaRSuccess santaData = do
     matches <- liftIO $ randomMatch $ participants $ santaData
-    App { appMailer = mailer} <- getYesod
-    liftIO $ mapM_ (\((p,e),(m,_)) -> sendMail mailer $ mkMail e p m) matches
+    yesod <- getYesod
+    let mailService = appMailService yesod
+    liftIO $ mapM_ (\((p,e),(m,_)) -> sendMail mailService $ mkMail e p m) matches
 
     let infoWidget = [whamlet|
             Secret Santa generated your matches!

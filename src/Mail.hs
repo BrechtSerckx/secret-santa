@@ -11,13 +11,15 @@
 module Mail where
 
 import           Network.Mail.Mime  hiding (htmlPart)
+import           Network.Mail.SMTP (sendMailWithLogin')
+import           Network.Mail.SMTP.Auth (UserName, Password)
+import           Network.Socket (HostName, PortNumber)
 import           Text.Blaze.Html.Renderer.Utf8 (renderHtml)
-import           Import.NoFoundation
 import           Text.Shakespeare.Text (stext)
+import           Text.Hamlet (shamlet)
 import qualified Data.Text.Lazy.Encoding
+import           Data.Text
 
-class Mailer a where
-    sendMail :: a -> Mail -> IO ()
 
 from = Address (Just "Secret Santa" ) "secret-santa@secret-santa.net" 
 cc = []
@@ -25,8 +27,34 @@ bcc = []
 subject = "Your Secret Santa Match"
 
 
---sendMail :: Mail -> IO ()
---sendMail = renderSendMail 
+data MailService = SendMailService
+                 | GMailService
+    { gMailUsername :: UserName
+    , gMailPassword :: Password
+    }
+
+data MailServiceSettings = SendMailSettings
+                         | GMailSettings
+    { gMailSettingsUserName :: UserName
+    , gMailSettingsPassword :: Password
+    }
+
+    
+makeMailService :: MailServiceSettings -> MailService
+makeMailService SendMailSettings = SendMailService
+makeMailService (GMailSettings u p) = GMailService u p
+
+
+
+sendMail :: MailService -> Mail -> IO ()
+sendMail SendMailService mail = renderSendMail mail
+sendMail (GMailService user pass) mail = sendMailWithLogin' host port user pass mail
+    where
+        host = "smtp.google.com" :: HostName
+        port_tls = 587 :: PortNumber
+        port_ssl = 465 :: PortNumber
+        port = port_tls
+
 
 mkMail :: Address -> Text -> Text -> Mail
 mkMail to participant match = (emptyMail $ from)

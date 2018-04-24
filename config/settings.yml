@@ -27,3 +27,13 @@ ip-from-header: "_env:IP_FROM_HEADER:false"
 
 copyright: Copyright, copyleft, whatever
 #analytics: UA-YOURCODE
+#
+
+mail:
+    { service: sendmail
+    , origin: no-reply@secretsanta.net
+    , subject: Some subject
+    , sendmail: 
+        { service: sendmail
+        }
+    }
