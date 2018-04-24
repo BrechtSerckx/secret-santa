@@ -3,6 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 -- | Settings are centralized, as much as possible, into this file. This
 -- includes database connection settings, static file locations, etc.
 -- In addition, you can configure a number of different aspects of Yesod
@@ -14,6 +15,7 @@ import ClassyPrelude.Yesod
 import qualified Control.Exception as Exception
 import Data.Aeson                  (Result (..), fromJSON, withObject, (.!=),
                                     (.:?))
+import Data.Aeson.Types            (typeMismatch)
 import Data.FileEmbed              (embedFile)
 import Data.Yaml                   (decodeEither')
 import Language.Haskell.TH.Syntax  (Exp, Name, Q)
@@ -21,6 +23,8 @@ import Network.Wai.Handler.Warp    (HostPreference)
 import Yesod.Default.Config2       (applyEnvValue, configSettingsYml)
 import Yesod.Default.Util          (WidgetFileSettings, widgetFileNoReload,
                                     widgetFileReload)
+import           Network.Mail.SMTP.Auth (UserName, Password)
+import Mail (MailServiceSettings(..))
 
 -- | Runtime settings to configure this application. These settings can be
 -- loaded from various sources: defaults, environment variables, config files,
@@ -55,6 +59,15 @@ data AppSettings = AppSettings
     -- ^ Copyright text to appear in the footer of the page
     , appAnalytics              :: Maybe Text
     -- ^ Google Analytics code
+    
+    , appMailSettings           :: MailSettings
+    }
+
+data MailSettings = MailSettings
+    { mailService                   :: Text
+    , mailOrigin                    :: Text
+    , mailSubject                   :: Text
+    , mailServiceSettings           :: MailServiceSettings
     }
 
 instance FromJSON AppSettings where
@@ -82,7 +95,29 @@ instance FromJSON AppSettings where
         appCopyright              <- o .: "copyright"
         appAnalytics              <- o .:? "analytics"
 
+        appMailSettings           <- o .: "mail"
+
         return AppSettings {..}
+
+instance FromJSON MailSettings where
+    parseJSON = withObject "MailSettings" $ \o -> do
+        mailService <- o .: "service"
+        mailOrigin  <- o .: "origin"
+        mailSubject <- o .: "subject"
+        mailServiceSettings <- o .: mailService
+        return MailSettings {..}
+
+
+instance FromJSON MailServiceSettings where
+    parseJSON = withObject "MailServiceSettings" $ \o -> do
+        svcType :: Text <- o .: "service"
+        case svcType of
+            "sendmail" -> return SendMailSettings
+            "gmail"    -> do
+                gMailSettingsUserName :: UserName <- o .: "username"
+                gMailSettingsPassword :: Password <- o .: "password"
+                return GMailSettings {..}
+            _          -> typeMismatch "MailService" $ Object o
 
 -- | Settings for 'widgetFile', such as which template languages to support and
 -- default Hamlet settings.

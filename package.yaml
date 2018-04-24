@@ -48,6 +48,7 @@ dependencies:
 - smtp-mail
 - blaze-html
 - email-validate
+- network
 
 # The library contains all of our application code. The executable
 # defined below is just a thin wrapper.
@@ -78,6 +79,7 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -Wunused-matches
     dependencies:
     - secret-santa
     when:
