@@ -101,10 +101,13 @@ instance FromJSON AppSettings where
 
 instance FromJSON MailSettings where
     parseJSON = withObject "MailSettings" $ \o -> do
-        mailService <- o .: "service"
         mailOrigin  <- o .: "origin"
         mailSubject <- o .: "subject"
-        mailServiceSettings <- o .: mailService
+
+        -- mail service specific settings
+        --mailService <- o .: "service"
+        --mailServiceSettings <- o .: mailService
+        mailServiceSettings <- o .: "service-settings"
         return MailSettings {..}
 
 
