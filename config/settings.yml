@@ -30,10 +30,9 @@ copyright: Copyright, copyleft, whatever
 #
 
 mail:
-    { service: sendmail
-    , origin: no-reply@secretsanta.net
+    { origin: no-reply@secretsanta.net
     , subject: Some subject
-    , sendmail: 
+    , service-settings: 
         { service: sendmail
         }
     }
