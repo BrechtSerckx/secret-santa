@@ -26,6 +26,6 @@ $(document).ready(function() {
    
     $(wrapper).on("click",".remove_field", function(e){ 
         e.preventDefault(); 
-        $(this).parent('span').remove();
+        $(this).parent('div').remove();
     });
 });
