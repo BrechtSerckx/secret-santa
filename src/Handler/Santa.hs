@@ -35,44 +35,73 @@ data SantaData = SantaData
 
 multiForm :: Html -> MForm Handler (FormResult SantaData, Widget)
 multiForm extra = do
-    (dayRes, dayView) <- mreq dayField "Date: " Nothing
-    (priceRes, priceView) <- mreq doubleField "Price: " $ Just 5
-    (descrRes, descrView) <- mreq textareaField "Description: " $ Just $ Textarea "Enter a description here"
-    (namesRes, namesView) <- mreq (multiTextField "Name") "Names" Nothing
-    (emailsRes, emailsView) <- mreq (multiEmailField "Email") "Emails" Nothing
+    let descrFieldSettings = FieldSettings "Description" (Just "Enter a description") (Just "description") (Just "description") [("class","col-xs-12 col-md-9")]
+    (descrRes, descrView) <- mreq textareaField descrFieldSettings $ Just $ Textarea "Enter a description here"
+    let dateFieldSettings = FieldSettings "Date" (Just "Enter a date") (Just "date") (Just "date") [("class","col-xs-12 col-md-9")]
+    (dateRes, dateView) <- mreq dayField dateFieldSettings Nothing
+    let priceFieldSettings = FieldSettings "Price" (Just "Enter a price") (Just "price") (Just "price") [("class","col-xs-12 col-md-9")]
+    (priceRes, priceView) <- mreq doubleField priceFieldSettings $ Just 5
+    let namesFieldSettings = FieldSettings "Name" (Just "Enter a names") (Just "names") (Just "names") [("class","col-xs-12 col-sm-10 col-md-3")]
+    (namesRes, namesView) <- mreq multiTextField namesFieldSettings Nothing
+    let emailsFieldSettings = FieldSettings "Email" (Just "Enter a emails") (Just "emails") (Just "emails") [("class","col-xs-12 col-sm-10 col-md-4")]
+    (emailsRes, emailsView) <- mreq multiEmailField emailsFieldSettings Nothing
     let widget = do
             toWidget
                 [lucius||]
             [whamlet|
                 #{extra}
-                <h4>
-                <div>
-                    ^{fvLabel descrView}
-                    <br>
-                    ^{fvInput descrView}
+                <div .row>
+                    <h4>
+                        General
+
+                <div .row >
+                    <label .col-xs-12 .hidden-md .hidden-lg for="description" >
+                        ^{fvLabel descrView}
+                    <div .form-group>
+                        <label .col-xs-2 .hidden-xs .hidden-sm for="description" >
+                            ^{fvLabel descrView}
+                        ^{fvInput descrView}
+                        <div .col-xs-1>
                 <br>
-                <div .form-group>
-                    <span>
-                        ^{fvLabel dayView}
-                    <span>
-                        ^{fvInput dayView}
-                <div .form-group>
-                    <span>
+
+                <div .row >
+                    <label .col-xs-12 .hidden-md .hidden-lg for="date" >
+                        ^{fvLabel dateView}
+                    <div .form-group>
+                        <label .col-xs-2 .hidden-xs .hidden-sm for="date" >
+                            ^{fvLabel dateView}
+                        ^{fvInput dateView}
+                        <div .col-xs-1>
+                <br>
+
+                <div .row >
+                    <label .col-xs-12 .hidden-md .hidden-lg for="price" >
                         ^{fvLabel priceView}
-                    <span>
+                    <div .form-group>
+                        <label .col-xs-2 .hidden-xs .hidden-sm for="price" >
+                            ^{fvLabel priceView}
                         ^{fvInput priceView}
+                        <div .col-xs-1>
                 <br>
-                <h4>
-                    Participants:
-                <div .participant_input_wrapper .table .table-striped>
-                    <span .form-group .tr .participant_input_proto>
-                        <div .td .col-md-5 >
+
+                <div .row>
+                    <h4>
+                        Participants:
+                
+                <div .row .participant_input_wrapper >
+                    <div .form-group .participant_input_proto>
+                        <div>
+                            <label .col-sm-2 .col-md-2 .hidden-xs>
+                                ^{fvLabel namesView}
                             ^{fvInput namesView}
-                        <div .td .col-md-5 >
+                        <div>
+                            <label .col-sm-2 .col-md-2 .hidden-xs>
+                                ^{fvLabel emailsView}
                             ^{fvInput emailsView}
-                        <div .remove_field .glyphicon .glyphicon-remove .td .col-md-2>
+                        <div .remove_field .glyphicon .glyphicon-remove .col-xs-12 .col-md-1>
+                        <br>
             |]
-    let infoRes = mkSantaInfo <$> descrRes <*> dayRes <*> priceRes 
+    let infoRes = mkSantaInfo <$> descrRes <*> dateRes <*> priceRes 
     let psRes = mkSantaParticipants <$> namesRes <*> emailsRes
     let res = case mkSantaData <$> infoRes <*> psRes of
             FormSuccess (Right santaData) -> FormSuccess $ trace (show santaData) santaData
@@ -115,31 +144,30 @@ mkParticipant (name,email)
 
 
 
-multiTextField :: Text -> Field Handler [Text]
-multiTextField label = Field
+multiTextField :: Field Handler [Text]
+multiTextField = Field
     { fieldParse = \rawVals _fileVals -> return $ Right $ Just $ tail rawVals
-    , fieldView = \id name attrs _eResult _isReq ->
+    , fieldView = \theId name attrs val isReq ->
         [whamlet|
-            <span>
-                <label .control-label for=#{id}>#{label}: 
-                <input .form-control id=#{id} name=#{name} *{attrs} type=text>
+            <input id="#{theId}" name="#{name}" *{attrs} type=text :isReq:required>
         |] 
+        {--[whamlet|
+            <input id="#{theId}" name="#{name}" *{attrs} type=text :isReq:required value="#{either id id val}">
+        |]--}
     , fieldEnctype = UrlEncoded
     }
 
 
-multiEmailField :: Text -> Field Handler [Text]
-multiEmailField label = Field
+multiEmailField :: Field Handler [Text]
+multiEmailField = Field
     { fieldParse = \rawVals _fileVals -> return $ parseEmails rawVals 
-    , fieldView = \id name attrs _eResult _isReq ->
+    , fieldView = \theId name attrs val isReq ->
         [whamlet|
-            <span>
-                <label .control-label for=#{id}>#{label}: 
-                <span .input-group>
-                    <span .input-group-addon>
-                        @
-                    <input .form-control id=#{id} name=#{name} *{attrs} type=email>
-        |] 
+            <input id="#{theId}" name="#{name}" *{attrs} type=email :isReq:required>
+        |]
+        {--[whamlet|
+            <input id="#{theId}" name="#{name}" *{attrs} type=email :isReq:required value="#{either id id val}">
+        |]--}
     , fieldEnctype = UrlEncoded
     }
 
@@ -171,7 +199,7 @@ getSantaR = do
         |]
 
     let bodyWidget = [whamlet|
-        <form method=post action=@{SantaR}#forms enctype=#{formEnctype} .form-inline>
+        <form method=post action=@{SantaR}#forms enctype=#{formEnctype} .form>
             ^{formWidget}
             <button type=button .add_field_button .btn>Add More
             <button .btn.btn-primary type="submit">
