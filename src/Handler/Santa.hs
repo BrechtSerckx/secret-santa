@@ -15,7 +15,7 @@ import qualified Text.Email.Validate as Email
 import qualified Data.ByteString.Char8 as BS
 import           Network.Mail.Mime
 import Mail      (sendMail,mkMail)
-import Data.Either (isLeft)
+import Data.Either (isLeft,isRight)
 
 type Participant = (Text,Address)
 
@@ -149,7 +149,7 @@ multiTextField = Field
     { fieldParse = \rawVals _fileVals -> return $ Right $ Just $ tail rawVals
     , fieldView = \theId name attrs val isReq ->
         [whamlet|
-            <input id="#{theId}" name="#{name}" *{attrs} type=text :isReq:required>
+            <input id="#{theId}" name="#{name}" *{attrs} type=text :isReq:required :(isRight val):data-defaults="#{either id unwords val}">
         |] 
         {--[whamlet|
             <input id="#{theId}" name="#{name}" *{attrs} type=text :isReq:required value="#{either id id val}">
@@ -157,13 +157,15 @@ multiTextField = Field
     , fieldEnctype = UrlEncoded
     }
 
+id :: a -> a
+id x = x
 
 multiEmailField :: Field Handler [Text]
 multiEmailField = Field
     { fieldParse = \rawVals _fileVals -> return $ parseEmails rawVals 
     , fieldView = \theId name attrs val isReq ->
         [whamlet|
-            <input id="#{theId}" name="#{name}" *{attrs} type=email :isReq:required>
+            <input id="#{theId}" name="#{name}" *{attrs} type=email :isReq:required :(isRight val):data-defaults="#{either id unwords val}">
         |]
         {--[whamlet|
             <input id="#{theId}" name="#{name}" *{attrs} type=email :isReq:required value="#{either id id val}">
