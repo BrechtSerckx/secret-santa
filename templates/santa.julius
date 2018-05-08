@@ -26,6 +26,6 @@ $(document).ready(function() {
    
     $(wrapper).on("click",".remove_field", function(e){ 
         e.preventDefault(); 
-        $(this).parent('div').remove();
+        $(this).closest('.participant_input').remove();
     });
 });

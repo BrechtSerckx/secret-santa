@@ -1,0 +1,57 @@
+#{extra}
+<div .row>
+    <h4>
+        General
+
+<div .row >
+    <label .col-xs-12 .hidden-md .hidden-lg for="description" >
+        ^{fvLabel descrView}
+    <div .form-group>
+        <label .col-xs-2 .hidden-xs .hidden-sm for="description" >
+            ^{fvLabel descrView}
+        ^{fvInput descrView}
+        <div .col-xs-1>
+<br>
+
+<div .row >
+    <label .col-xs-12 .hidden-md .hidden-lg for="date" >
+        ^{fvLabel dateView}
+    <div .form-group>
+        <label .col-xs-2 .hidden-xs .hidden-sm for="date" >
+            ^{fvLabel dateView}
+        ^{fvInput dateView}
+        <div .col-xs-1>
+<br>
+
+<div .row >
+    <label .col-xs-12 .hidden-md .hidden-lg for="price" >
+        ^{fvLabel priceView}
+    <div .form-group>
+        <label .col-xs-2 .hidden-xs .hidden-sm for="price" >
+            ^{fvLabel priceView}
+        ^{fvInput priceView}
+        <div .col-xs-1>
+<br>
+
+<div .row>
+    <h4>
+        Participants:
+                
+<div .row .participant_input_wrapper>
+    <div .form-group .participant_input .participant_input_proto>
+        <div>
+            <label .col-xs-12 .hidden-sm .hidden-md .hidden-lg>
+                ^{fvLabel namesView}
+            <div>
+                <label .col-lg-2 .col-md-2 .hidden-xs>
+                    ^{fvLabel namesView}
+                ^{fvInput namesView}
+            <label .col-xs-12 .hidden-sm .hidden-md .hidden-lg>
+                ^{fvLabel emailsView}
+            <div>
+                <label .col-lg-2 .col-md-2 .hidden-xs>
+                    ^{fvLabel emailsView}
+                ^{fvInput emailsView}
+            <div .remove_field .glyphicon .glyphicon-remove .col-md-1 .col-lg-1>
+        <br>
+<br>
