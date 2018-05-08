@@ -10,6 +10,7 @@ module Handler.Santa where
 import Import hiding (count,tail,trace,multiEmailField,id)
 import SecretSanta (randomMatch)
 import Data.List (nub,tail)
+import Data.Maybe (fromJust)
 import Debug.Trace (trace)
 import qualified Text.Email.Validate as Email
 import qualified Data.ByteString.Char8 as BS
@@ -20,9 +21,9 @@ import Data.Either (isLeft,isRight)
 type Participant = (Text,Address)
 
 data SantaInfo = SantaInfo
-    { santaDescr :: Text
-    , santaDate  :: Day
-    , santaPrice :: Double
+    { santaDescr :: Maybe Text
+    , santaDate  :: Maybe Day
+    , santaPrice :: Maybe Double
     } deriving (Show,Eq)
     
     
@@ -35,72 +36,24 @@ data SantaData = SantaData
 
 multiForm :: Html -> MForm Handler (FormResult SantaData, Widget)
 multiForm extra = do
+    -- description
     let descrFieldSettings = FieldSettings "Description" (Just "Enter a description") (Just "description") (Just "description") [("class","col-xs-12 col-md-9")]
-    (descrRes, descrView) <- mreq textareaField descrFieldSettings $ Just $ Textarea "Enter a description here"
+    (descrRes, descrView) <- mopt textareaField descrFieldSettings Nothing
+    -- date
     let dateFieldSettings = FieldSettings "Date" (Just "Enter a date") (Just "date") (Just "date") [("class","col-xs-12 col-md-9")]
-    (dateRes, dateView) <- mreq dayField dateFieldSettings Nothing
+    date <- utctDay <$> liftIO getCurrentTime
+    (dateRes, dateView) <- mopt dayField dateFieldSettings $ Just $ Just $ date
+    -- price
     let priceFieldSettings = FieldSettings "Price" (Just "Enter a price") (Just "price") (Just "price") [("class","col-xs-12 col-md-9")]
-    (priceRes, priceView) <- mreq doubleField priceFieldSettings $ Just 5
+    (priceRes, priceView) <- mopt doubleField priceFieldSettings $ Just $ Just 5
+    -- names
     let namesFieldSettings = FieldSettings "Name" (Just "Enter a names") (Just "names") (Just "names") [("class","col-xs-12 col-sm-10 col-md-3")]
     (namesRes, namesView) <- mreq multiTextField namesFieldSettings Nothing
+    -- email
     let emailsFieldSettings = FieldSettings "Email" (Just "Enter a emails") (Just "emails") (Just "emails") [("class","col-xs-12 col-sm-10 col-md-4")]
     (emailsRes, emailsView) <- mreq multiEmailField emailsFieldSettings Nothing
-    let widget = do
-            toWidget
-                [lucius||]
-            [whamlet|
-                #{extra}
-                <div .row>
-                    <h4>
-                        General
 
-                <div .row >
-                    <label .col-xs-12 .hidden-md .hidden-lg for="description" >
-                        ^{fvLabel descrView}
-                    <div .form-group>
-                        <label .col-xs-2 .hidden-xs .hidden-sm for="description" >
-                            ^{fvLabel descrView}
-                        ^{fvInput descrView}
-                        <div .col-xs-1>
-                <br>
-
-                <div .row >
-                    <label .col-xs-12 .hidden-md .hidden-lg for="date" >
-                        ^{fvLabel dateView}
-                    <div .form-group>
-                        <label .col-xs-2 .hidden-xs .hidden-sm for="date" >
-                            ^{fvLabel dateView}
-                        ^{fvInput dateView}
-                        <div .col-xs-1>
-                <br>
-
-                <div .row >
-                    <label .col-xs-12 .hidden-md .hidden-lg for="price" >
-                        ^{fvLabel priceView}
-                    <div .form-group>
-                        <label .col-xs-2 .hidden-xs .hidden-sm for="price" >
-                            ^{fvLabel priceView}
-                        ^{fvInput priceView}
-                        <div .col-xs-1>
-                <br>
-
-                <div .row>
-                    <h4>
-                        Participants:
-                
-                <div .row .participant_input_wrapper >
-                    <div .form-group .participant_input_proto>
-                        <div>
-                            <label .col-sm-2 .col-md-2 .hidden-xs>
-                                ^{fvLabel namesView}
-                            ^{fvInput namesView}
-                        <div>
-                            <label .col-sm-2 .col-md-2 .hidden-xs>
-                                ^{fvLabel emailsView}
-                            ^{fvInput emailsView}
-                        <div .remove_field .glyphicon .glyphicon-remove .col-xs-12 .col-md-1>
-                        <br>
-            |]
+    let widget = $(widgetFile "santa-form")
     let infoRes = mkSantaInfo <$> descrRes <*> dateRes <*> priceRes 
     let psRes = mkSantaParticipants <$> namesRes <*> emailsRes
     let res = case mkSantaData <$> infoRes <*> psRes of
@@ -116,10 +69,10 @@ mkSantaData _         (Left es) = Left es
 mkSantaData (Right info) (Right ps) = Right $ SantaData info ps
 
 
-mkSantaInfo :: Textarea -> Day -> Double -> Either [Text] SantaInfo
-mkSantaInfo descr day price
-    | price < 0 = Left $ return "Price must be positive!"
-    | otherwise = Right $ SantaInfo (unTextarea descr) day price
+mkSantaInfo :: Maybe Textarea -> Maybe Day -> Maybe Double -> Either [Text] SantaInfo
+mkSantaInfo descr day price 
+    | isJust price && (fromJust price) < 0 = Left $ return "Price must be positive!"
+    | otherwise = Right $ SantaInfo (unTextarea <$> descr) day price
     
 
 mkSantaParticipants :: [Text] -> [Text] -> Either [Text] [Participant]
@@ -151,9 +104,6 @@ multiTextField = Field
         [whamlet|
             <input id="#{theId}" name="#{name}" *{attrs} type=text :isReq:required :(isRight val):data-defaults="#{either id unwords val}">
         |] 
-        {--[whamlet|
-            <input id="#{theId}" name="#{name}" *{attrs} type=text :isReq:required value="#{either id id val}">
-        |]--}
     , fieldEnctype = UrlEncoded
     }
 
@@ -167,9 +117,6 @@ multiEmailField = Field
         [whamlet|
             <input id="#{theId}" name="#{name}" *{attrs} type=email :isReq:required :(isRight val):data-defaults="#{either id unwords val}">
         |]
-        {--[whamlet|
-            <input id="#{theId}" name="#{name}" *{attrs} type=email :isReq:required value="#{either id id val}">
-        |]--}
     , fieldEnctype = UrlEncoded
     }
 
