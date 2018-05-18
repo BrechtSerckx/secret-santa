@@ -44,7 +44,7 @@ dependencies:
 - foreign-store
 - random
 - mime-mail
-- mime-mail-ses
+- mime-mail-ses >=0.4.1
 - smtp-mail
 - blaze-html
 - email-validate
