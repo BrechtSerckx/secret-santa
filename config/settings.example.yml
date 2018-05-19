@@ -8,7 +8,7 @@ ip-from-header: "_env:IP_FROM_HEADER:false"
 
 # Default behavior: determine the application root from the request headers.
 # Uncomment to set an explicit approot
-#approot:        "_env:APPROOT:http://localhost:3000"
+#approot:       "_env:APPROOT:http://localhost:3000"
 
 # By default, `yesod devel` runs in development, and built executables use
 # production settings (see below). To override this, use the following:
@@ -30,9 +30,24 @@ copyright: Copyright, copyleft, whatever
 #
 
 mail:
-    { origin: no-reply@secretsanta.net
-    , subject: Some subject
-    , service-settings: 
-        { service: sendmail
+        # Origin for the sent emails
+        { origin_name: Secret-Santa.net
+        , origin_email: no-reply@secretsanta.net
+        # Email subject
+        , subject: Some subject
+
+        # Email service: ses, gmail or sendmail
+        , service: ses
+
+        # gmail settings
+        #, gmail_username: my_username
+        #, gmail_password: my_password
+
+        # amazon ses settings
+        , ses_access_key: my_access_key
+        , ses_secret_key: my_secret_key
+        , ses_session_token: my_token
+        , ses_region: my_region
         }
-    }
+
+# vim: set expandtab:
