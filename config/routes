@@ -9,7 +9,3 @@
 /       HomeR GET POST
 
 /santa SantaR GET POST
-/test/mform MFormTestR GET 
-/test/massinput MassInputFormTestR GET
-
-/comments CommentR POST

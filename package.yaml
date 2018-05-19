@@ -50,6 +50,9 @@ dependencies:
 - email-validate
 - network
 
+ghc-options:
+- -Wtabs
+
 # The library contains all of our application code. The executable
 # defined below is just a thin wrapper.
 library:
@@ -59,14 +62,12 @@ library:
     then:
       ghc-options:
       - -Wall
-      - -fwarn-tabs
       - -O0
       - -Wunused-matches
       cpp-options: -DDEVELOPMENT
     else:
       ghc-options:
       - -Wall
-      - -fwarn-tabs
       - -O2
       - -Wunused-matches
 
