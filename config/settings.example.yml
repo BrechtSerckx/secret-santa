@@ -25,29 +25,29 @@ ip-from-header: "_env:IP_FROM_HEADER:false"
 # mutable-static: false
 # skip-combining: false
 
-copyright: Copyright, copyleft, whatever
+copyright: "GNU AGPLv3"
 #analytics: UA-YOURCODE
 #
 
 mail:
         # Origin for the sent emails
-        { origin_name: Secret-Santa.net
-        , origin_email: no-reply@secretsanta.net
+        { origin_name:  "Secret-Santa.net"
+        , origin_email: "no-reply@secretsanta.net"
         # Email subject
-        , subject: Some subject
+        , subject:      "Secret Santa"
 
         # Email service: ses, gmail or sendmail
-        , service: ses
+        , service:      "ses"
 
         # gmail settings
-        #, gmail_username: my_username
-        #, gmail_password: my_password
+        #, gmail_username: "my_username"
+        #, gmail_password: "my_password"
 
         # amazon ses settings
-        , ses_access_key: my_access_key
-        , ses_secret_key: my_secret_key
-        , ses_session_token: my_token
-        , ses_region: my_region
+        , ses_access_key:    "my_access_key"
+        , ses_secret_key:    "my_secret_key"
+        , ses_session_token: "my_token"
+        , ses_region:        "my_region"
         }
 
 # vim: set expandtab:
