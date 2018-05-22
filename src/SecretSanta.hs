@@ -39,14 +39,14 @@ match (x:xs) ys = do
 shuffle :: [a] -> IO [a]
 shuffle [] = return []
 shuffle xs = do
-        i <- getStdRandom $ randomR (1, length xs)
+        i <- getStdRandom $ randomR (0, length xs - 1)
         let 
                 x   = xs !! i
                 xs' = take i xs ++ drop (i+1) xs
         (x:) <$> shuffle xs'
 
 
-randomMatch :: Eq a => [a] -> IO [(a,a)]
+randomMatch :: (Eq a) => [a] -> IO [(a,a)]
 randomMatch xs = head <$> match xs <$> shuffle xs >>= shuffle
 
 
