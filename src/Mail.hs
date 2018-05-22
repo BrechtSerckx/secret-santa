@@ -1,26 +1,30 @@
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE DeriveDataTypeable         #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE QuasiQuotes                #-}
-{-# LANGUAGE TemplateHaskell            #-}
-{-# LANGUAGE TypeFamilies               #-}
-module Mail where
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards     #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+module Mail 
+        ( MailSettings(..)
+        , sendMail
+        , Network.Mail.Mime.Address(..)
+        , Network.Mail.Mime.Mail(..)
+        , Network.Mail.Mime.Part(..)
+        , Network.Mail.Mime.emptyMail
+        , Network.Mail.Mime.Encoding(..)
+        , Network.Mail.SMTP.Auth.UserName
+        , Network.Mail.SMTP.Auth.Password
+        )
+where
 
-import           Network.Mail.Mime  hiding (htmlPart)
+import           Data.Aeson
+    ( FromJSON, parseJSON, withObject, (.:), (.:?),Value(..)
+    )
+import           Data.Aeson.Types            (typeMismatch)
+import           Data.Text (Text)
+import           Data.Text.Encoding (encodeUtf8)
+
+import           Network.Mail.Mime (Address(..),Mail(..),renderSendMail,Part(..),emptyMail,Encoding(..))
 import qualified Network.Mail.Mime.SES as SES
 import           Network.Mail.SMTP (sendMailWithLogin')
 import           Network.Mail.SMTP.Auth (UserName, Password)
-import           Network.Socket (HostName, PortNumber)
-import           Text.Blaze.Html.Renderer.Utf8 (renderHtml)
-import           Text.Shakespeare.Text (stext)
-import           Text.Hamlet (shamlet)
-import           Data.Text
-import qualified Data.Text.Lazy.Encoding as Enc.Lazy (encodeUtf8)
-import qualified Data.Text.Encoding as Enc.Strict (encodeUtf8)
 
 
 
@@ -45,63 +49,46 @@ data MailSettings
                 }
 
 
+instance FromJSON MailSettings where
+    parseJSON = withObject "MailSettings" $ \o -> do
+        mailOriginName  <- o .: "origin_name"
+        mailOriginEmail  <- o .: "origin_email"
+        let mailOrigin = Address (Just mailOriginName) mailOriginEmail
+        mailSubject <- o .: "subject"
+
+        svcType :: Text <- o .: "service"
+        case svcType of
+            "sendmail" -> return SendMailSettings {..}
+            "gmail"    -> do
+                gMailUserName :: UserName <- o .: "gmail_username"
+                gMailPassword :: Password <- o .: "gmail_password"
+                return GMailSettings {..}
+            "ses"  -> do
+                sesAccessKey        :: Text       <- o .:  "ses_access_key"
+                sesSecretKey        :: Text       <- o .:  "ses_secret_key"
+                sesSessionToken     :: Maybe Text <- o .:? "ses_session_token"
+                sesRegion           :: Text       <- o .:  "ses_region"
+                return SesSettings {..}
+            _          -> typeMismatch "MailService" $ Object o
+
+
 sendMail :: MailSettings -> Mail -> IO ()
 sendMail (SendMailSettings _ _) mail = renderSendMail mail
 sendMail (GMailSettings _ _ user pass) mail = sendMailWithLogin' host port user pass mail
         where
-                host = "smtp.google.com" :: HostName
-                port_tls = 587 :: PortNumber
-                port_ssl = 465 :: PortNumber
+                host = "smtp.google.com"
+                port_tls = 587
+                port_ssl = 465
                 port = port_tls
 sendMail sesSettings@(SesSettings _ _ _ _ _ _) mail 
         = (flip SES.renderSendMailSESGlobal) mail
         $ SES.SES
-                { SES.sesFrom         = Enc.Strict.encodeUtf8 . addressEmail $ mailOrigin sesSettings
-                , SES.sesTo           = Prelude.map (Enc.Strict.encodeUtf8 . addressEmail) $ mailTo mail
-                , SES.sesAccessKey    = Enc.Strict.encodeUtf8 $ sesAccessKey sesSettings
-                , SES.sesSecretKey    = Enc.Strict.encodeUtf8 $ sesSecretKey sesSettings
-                , SES.sesSessionToken = fmap Enc.Strict.encodeUtf8 $ sesSessionToken sesSettings
+                { SES.sesFrom         = encodeUtf8 . addressEmail $ mailOrigin sesSettings
+                , SES.sesTo           = Prelude.map (encodeUtf8 . addressEmail) $ mailTo mail
+                , SES.sesAccessKey    = encodeUtf8 $ sesAccessKey sesSettings
+                , SES.sesSecretKey    = encodeUtf8 $ sesSecretKey sesSettings
+                , SES.sesSessionToken = fmap encodeUtf8 $ sesSessionToken sesSettings
                 , SES.sesRegion       = sesRegion sesSettings
                 }
-
-
-mkMail :: MailSettings -> Address -> Text -> Text -> Mail
-mkMail mailSettings to participant match 
-        = (emptyMail $ mailOrigin mailSettings)
-                { mailTo = [to]
-                , mailHeaders =
-                        [ ("Subject", mailSubject mailSettings)
-                        ]
-                , mailParts = [[textPart, htmlPart]]
-                }
-        where
-                textPart = mkTextPart participant match
-                htmlPart = mkHtmlPart participant match
-
-mkTextPart :: Text -> Text -> Part
-mkTextPart participant match = Part
-        { partType = "text/plain; charset=utf-8"
-        , partEncoding = None
-        , partFilename = Nothing
-        , partContent = Enc.Lazy.encodeUtf8
-                [stext|
-                        Hi #{participant}
-                        You are Secret Santa for: #{match}!
-                |]
-        , partHeaders = []
-        }
-
-mkHtmlPart :: Text -> Text -> Part
-mkHtmlPart participant match = Part
-        { partType = "text/html; charset=utf-8"
-        , partEncoding = None
-        , partFilename = Nothing
-        , partContent = renderHtml
-                [shamlet|
-<p>Hi #{participant}
-<p>You are Secret Santa for: <b>#{match}<\b>!
-|]
-        , partHeaders = []
-        }
 
 
