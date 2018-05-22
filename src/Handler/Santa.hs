@@ -7,34 +7,24 @@
 {-# LANGUAGE EmptyCase             #-}
 module Handler.Santa where
 
-import           Import hiding (count,tail,trace,multiEmailField,id)
-import           SecretSanta (randomMatch)
-import           Data.List (nub,tail)
-import           Data.Maybe (fromJust)
-import           Debug.Trace (trace)
-import qualified Text.Email.Validate as Email
+
 import qualified Data.ByteString.Char8 as BS
-import           Network.Mail.Mime
-import           Mail      (sendMail,mkMail)
 import           Data.Either (isLeft,isRight)
+import           Data.List (nub,tail)
+import           Data.Maybe (fromJust,isJust)
+import           Data.Text.Lazy.Encoding (encodeUtf8)
+import           Debug.Trace (trace)
+import           Text.Blaze.Html.Renderer.Utf8 (renderHtml)
+import qualified Text.Email.Validate as Email
+import           Text.Hamlet (shamlet)
+import           Text.Shakespeare.Text
 
-type Participant = (Text,Address)
-
-data SantaInfo = SantaInfo
-        { santaDescr :: Maybe Text
-        , santaDate  :: Maybe Day
-        , santaPrice :: Maybe Double
-        } deriving (Show,Eq)
-        
-        
-
-data SantaData = SantaData
-        { santaInfo    :: SantaInfo
-        , participants :: [Participant]
-        } deriving (Show,Eq)
+import           Import hiding (count,tail,trace,id,encodeUtf8,multiEmailField)
+import qualified Mail (sendMail,MailSettings(..),Address(..),Part(..),Mail(..),emptyMail,Encoding(..))
+import qualified SecretSanta
 
 
-multiForm :: Html -> MForm Handler (FormResult SantaData, Widget)
+multiForm :: Html -> MForm Handler (FormResult SecretSanta.SantaData, Widget)
 multiForm extra = do
         -- description
         let descrFieldSettings = FieldSettings "Description" (Just "Enter a description") (Just "description") (Just "description") [("class","col-xs-12 col-md-9")]
@@ -63,19 +53,19 @@ multiForm extra = do
         return (res, widget)
 
 
-mkSantaData :: Either [Text] SantaInfo -> Either [Text] [Participant] -> Either [Text] SantaData
+mkSantaData :: Either [Text] SecretSanta.SantaInfo -> Either [Text] [SecretSanta.Participant] -> Either [Text] SecretSanta.SantaData
 mkSantaData (Left es) _         = Left es
 mkSantaData _         (Left es) = Left es
-mkSantaData (Right info) (Right ps) = Right $ SantaData info ps
+mkSantaData (Right info) (Right ps) = Right $ SecretSanta.SantaData info ps
 
 
-mkSantaInfo :: Maybe Textarea -> Maybe Day -> Maybe Double -> Either [Text] SantaInfo
+mkSantaInfo :: Maybe Textarea -> Maybe Day -> Maybe Double -> Either [Text] SecretSanta.SantaInfo
 mkSantaInfo descr day price 
         | isJust price && (fromJust price) < 0 = Left $ return "Price must be positive!"
-        | otherwise = Right $ SantaInfo (unTextarea <$> descr) day price
+        | otherwise = Right $ SecretSanta.SantaInfo (unTextarea <$> descr) day price
         
 
-mkSantaParticipants :: [Text] -> [Text] -> Either [Text] [Participant]
+mkSantaParticipants :: [Text] -> [Text] -> Either [Text] [SecretSanta.Participant]
 mkSantaParticipants names emails
         | length (nub names) < length names = Left $ return "Your participants must have unique names!"
         | length (nub names) < 2            = Left $ return "You must enter at least two unique participants!"
@@ -90,11 +80,11 @@ mkSantaParticipants names emails
                                 | otherwise       = Right $ rights $ ps
 
 
-mkParticipant :: (Text,Text) -> Either Text Participant
+mkParticipant :: (Text,Text) -> Either Text SecretSanta.Participant
 mkParticipant (name,email)
         | name == ""    = Left $ "Name cannot be empty!"
         | email == ""   = Left $ "Email cannot be empty!"
-        | otherwise     = Right (name,Address (Just name) email)
+        | otherwise     = Right (name,Mail.Address (Just name) email)
 
 
 
@@ -128,18 +118,7 @@ parseEmails es
                 where
                         es' :: [ByteString]
                         es' = map (BS.pack . unpack) es
-{--
-emailField :: RenderMessage master FormMessage => Field sub master Text
-emailField = Field
-        { fieldParse = blank $
-                \s -> if Email.isValid (unpack s)
-                                then Right s
-                                else Left $ MsgInvalidEmail s
-        , fieldView = \theId name attrs val isReq -> toWidget [hamlet|
-<input id="#{theId}" name="#{name}" *{attrs} type="email" :isReq:required="" value="#{either id id val}">
-|]
 
---}
 
 getSantaR :: Handler Html
 getSantaR = do
@@ -156,7 +135,6 @@ getSantaR = do
                                 Match!
                 |]
         defaultLayout $ do
-                aDomId <- newIdent
                 setTitle "Secret Santa - BrechtSerckx.be"
                 $(widgetFile "santa")
 
@@ -170,21 +148,21 @@ postSantaR = do
                 FormMissing    -> postSantaRMissing
 
         defaultLayout $ do
-                aDomId <- newIdent
                 setTitle "Secret Santa - BrechtSerckx.be"
                 $(widgetFile "santa")
         
 
 
-postSantaRSuccess :: SantaData -> Handler (Widget,Widget)
+postSantaRSuccess :: SecretSanta.SantaData -> Handler (Widget,Widget)
 postSantaRSuccess santaData = do
-        matches <- liftIO $ randomMatch $ participants $ santaData
+        matches <- liftIO $ SecretSanta.randomMatch $ SecretSanta.participants $ santaData
+        let info = SecretSanta.santaInfo santaData
 
         mailSettings <- appMailSettings . appSettings <$> getYesod
 
         let sendMatchEmail ((participant,email),(match,_))
-                = sendMail mailSettings
-                $ mkMail mailSettings email participant match
+                = Mail.sendMail mailSettings
+                $ mkMail mailSettings email info participant match
 
         liftIO $ mapM_ sendMatchEmail matches
 
@@ -238,3 +216,58 @@ postSantaRFailure es = do
                                 <li>#{e}
                 |]
         return (infoWidget,bodyWidget)
+
+
+mkMail :: Mail.MailSettings -> Mail.Address -> SecretSanta.SantaInfo -> Text -> Text -> Mail.Mail
+mkMail mailSettings to santaInfo participant match 
+        = (Mail.emptyMail $ Mail.mailOrigin mailSettings)
+                { Mail.mailTo = [to]
+                , Mail.mailHeaders =
+                        [ ("Subject", Mail.mailSubject mailSettings)
+                        ]
+                , Mail.mailParts = [[textPart, htmlPart]]
+                }
+        where
+                textPart = mkTextPart santaInfo participant match
+                htmlPart = mkHtmlPart santaInfo participant match
+
+mkTextPart :: SecretSanta.SantaInfo -> Text -> Text -> Mail.Part
+mkTextPart (SecretSanta.SantaInfo sDescr sDate sPrice) participant match = Mail.Part
+        { Mail.partType = "text/plain; charset=utf-8"
+        , Mail.partEncoding = Mail.None
+        , Mail.partFilename = Nothing
+        , Mail.partContent = encodeUtf8
+                [stext|
+                        Hi #{participant}
+                        You are Secret Santa for: #{match}!
+
+                        $if isJust sDate
+                                Date: #{show (fromJust sDate)}
+                        $if isJust sPrice
+                                Price: #{show (fromJust sPrice)}
+                        $if isJust sDescr
+                                Description: #{fromJust sDescr}
+                |]
+        , Mail.partHeaders = []
+        }
+
+mkHtmlPart :: SecretSanta.SantaInfo -> Text -> Text -> Mail.Part
+mkHtmlPart (SecretSanta.SantaInfo sDescr sDate sPrice) participant match = Mail.Part
+        { Mail.partType = "text/html; charset=utf-8"
+        , Mail.partEncoding = Mail.None
+        , Mail.partFilename = Nothing
+        , Mail.partContent = renderHtml
+                [shamlet|
+                        <p>Hi #{participant}
+                        <p>You are Secret Santa for: <b>#{match}<\b>!
+                        $maybe date <- sDate 
+                                Date: #{show date}
+                        $maybe price <- sPrice 
+                                Price: #{price}
+                        $maybe descr <- sDescr
+                                Description: #{descr}
+|]
+        , Mail.partHeaders = []
+        }
+
+

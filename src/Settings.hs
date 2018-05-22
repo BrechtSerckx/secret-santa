@@ -16,7 +16,6 @@ import           qualified Control.Exception as Exception
 import           Data.Aeson
     ( Result (..), fromJSON, withObject, (.!=), (.:?)
     )
-import           Data.Aeson.Types            (typeMismatch)
 import           Data.FileEmbed              (embedFile)
 import           Data.Yaml                   (decodeEither')
 import           Language.Haskell.TH.Syntax  (Exp, Name, Q)
@@ -25,9 +24,7 @@ import           Yesod.Default.Config2       (applyEnvValue, configSettingsYml)
 import           Yesod.Default.Util
     ( WidgetFileSettings, widgetFileNoReload, widgetFileReload
     )
-import           Network.Mail.SMTP.Auth (UserName, Password)
-import           Network.Mail.Mime (Address(..))
-import           Mail (MailSettings(..))
+import           Mail (MailSettings)
 
 -- | Runtime settings to configure this application. These settings can be
 -- loaded from various sources: defaults, environment variables, config files,
@@ -95,30 +92,6 @@ instance FromJSON AppSettings where
         appMailSettings           <- o .: "mail"
 
         return AppSettings {..}
-
-instance FromJSON MailSettings where
-    parseJSON = withObject "MailSettings" $ \o -> do
-        mailOriginName  <- o .: "origin_name"
-        mailOriginEmail  <- o .: "origin_email"
-        let mailOrigin = Address (Just mailOriginName) mailOriginEmail
-        mailSubject <- o .: "subject"
-
-        svcType :: Text <- o .: "service"
-        case svcType of
-            "sendmail" -> return SendMailSettings {..}
-            "gmail"    -> do
-                gMailUserName :: UserName <- o .: "gmail_username"
-                gMailPassword :: Password <- o .: "gmail_password"
-                return GMailSettings {..}
-            "ses"  -> do
-                sesAccessKey        :: Text       <- o .:  "ses_access_key"
-                sesSecretKey        :: Text       <- o .:  "ses_secret_key"
-                sesSessionToken     :: Maybe Text <- o .:? "ses_session_token"
-                sesRegion           :: Text       <- o .:  "ses_region"
-                return SesSettings {..}
-            _          -> typeMismatch "MailService" $ Object o
-
-
 
 
 -- | Settings for 'widgetFile', such as which template languages to support and
