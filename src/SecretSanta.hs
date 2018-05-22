@@ -1,6 +1,3 @@
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE QuasiQuotes                #-}
-{-# LANGUAGE TemplateHaskell            #-}
 module SecretSanta where
 
 import           Control.Monad (guard)
