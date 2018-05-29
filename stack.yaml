@@ -64,3 +64,11 @@ extra-deps: [mime-mail-ses-0.4.1]
 #
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
+#
+#
+
+image:
+  containers:
+    - 
+      base: "fpco/ubuntu-with-libgmp:14.04"
+      name: "brechtserckx/secret-santa"

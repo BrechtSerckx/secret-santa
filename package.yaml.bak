@@ -108,3 +108,14 @@ flags:
     description: Turn on development settings, like auto-reload templates.
     manual: false
     default: false
+
+
+verbatim: |
+  image:
+    containers:
+      base: "fpco/ubuntu-with-libgmp:14.04"
+      name: "brechtserckx/secret-santa"
+      
+
+
+# vim: set tabstop=2 shiftwidth=2 expandtab:
