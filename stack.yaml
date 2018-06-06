@@ -66,9 +66,3 @@ extra-deps: [mime-mail-ses-0.4.1]
 # compiler-check: newer-minor
 #
 #
-
-image:
-  containers:
-    - 
-      base: "fpco/ubuntu-with-libgmp:14.04"
-      name: "brechtserckx/secret-santa"
