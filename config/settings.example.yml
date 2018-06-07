@@ -31,8 +31,8 @@ copyright: "GNU AGPLv3"
 
 mail:
         # Origin for the sent emails
-        { origin_name:  "Secret-Santa.net"
-        , origin_email: "no-reply@secretsanta.net"
+        { origin_name:  "Secret-Santa.xyz"
+        , origin_email: "no-reply@secret-santa.xyz"
         # Email subject
         , subject:      "Secret Santa"
 
@@ -44,10 +44,10 @@ mail:
         #, gmail_password: "my_password"
 
         # amazon ses settings
-        , ses_access_key:    "my_access_key"
-        , ses_secret_key:    "my_secret_key"
-        , ses_session_token: "my_token"
-        , ses_region:        "my_region"
+        , ses_access_key:    "${SES_ACCESS_KEY}"
+        , ses_secret_key:    "${SES_SECRET_KEY}"
+        , ses_session_token: "${SES_SESSION_TOKEN}"
+        , ses_region:        "${SES_REGION}"
         }
 
 # vim: set expandtab:
