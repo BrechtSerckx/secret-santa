@@ -1,5 +1,5 @@
 #! /bin/sh
 
 echo "Writing config.yml"
-envsubst < ../config/settings.example.yml > ../config/settings.yml
+envsubst < /app/config/settings.example.yml > /app/config/settings.yml
 echo "Done"
