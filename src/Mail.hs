@@ -66,8 +66,12 @@ instance FromJSON MailSettings where
             "ses"  -> do
                 sesAccessKey        :: Text       <- o .:  "ses_access_key"
                 sesSecretKey        :: Text       <- o .:  "ses_secret_key"
-                sesSessionToken     :: Maybe Text <- o .:? "ses_session_token"
+                sesSessionToken'    :: Maybe Text <- o .:? "ses_session_token"
                 sesRegion           :: Text       <- o .:  "ses_region"
+                let sesSessionToken = case sesSessionToken' of
+                        Nothing -> Nothing
+                        Just "" -> Nothing
+                        Just _  -> sesSessionToken'
                 return SesSettings {..}
             _          -> typeMismatch "MailService" $ Object o
 
