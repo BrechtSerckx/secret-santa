@@ -1,1 +1,2 @@
-web: bin/create-config.sh && secret-santa
+release: bin/create-config.sh
+web: secret-santa
