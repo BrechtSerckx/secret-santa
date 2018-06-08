@@ -38,7 +38,7 @@
         Participants:
                 
 <div .row .participant_input_wrapper>
-    <div .form-group .participant_input .participant_input_proto>
+    <div .form-group .participant_input>
         <div>
             <label .col-xs-12 .hidden-sm .hidden-md .hidden-lg>
                 ^{fvLabel namesView}

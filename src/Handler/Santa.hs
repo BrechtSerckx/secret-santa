@@ -10,7 +10,7 @@ module Handler.Santa where
 
 import qualified Data.ByteString.Char8 as BS
 import           Data.Either (isLeft,isRight)
-import           Data.List (nub,tail)
+import           Data.List (nub)
 import           Data.Maybe (fromJust,isJust)
 import           Data.Text.Lazy.Encoding (encodeUtf8)
 import           Debug.Trace (trace)
@@ -22,6 +22,7 @@ import           Text.Shakespeare.Text
 import           Import hiding (count,tail,trace,id,encodeUtf8,multiEmailField)
 import qualified Mail (sendMail,MailSettings(..),Address(..),Part(..),Mail(..),emptyMail,Encoding(..))
 import qualified SecretSanta
+
 
 
 multiForm :: Html -> MForm Handler (FormResult SecretSanta.SantaData, Widget)
@@ -90,7 +91,7 @@ mkParticipant (name,email)
 
 multiTextField :: Field Handler [Text]
 multiTextField = Field
-        { fieldParse = \rawVals _fileVals -> return $ Right $ Just $ tail rawVals
+        { fieldParse = \rawVals _fileVals -> return $ Right $ Just rawVals
         , fieldView = \theId name attrs val isReq ->
                 [whamlet|
                         <input id="#{theId}" name="#{name}" *{attrs} type=text :isReq:required :(isRight val):data-defaults="#{either id unwords val}">
@@ -113,7 +114,7 @@ multiEmailField = Field
 
 parseEmails :: [Text] -> Either (SomeMessage (HandlerSite Handler)) (Maybe [Text])
 parseEmails es 
-        | any (Email.isValid) es' = Right $ Just $ tail es
+        | any (Email.isValid) es' = Right $ Just es
         | otherwise               = Left $ "Invalid email address!"
                 where
                         es' :: [ByteString]
