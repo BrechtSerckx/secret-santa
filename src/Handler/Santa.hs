@@ -260,7 +260,7 @@ mkHtmlPart (SecretSanta.SantaInfo sDescr sDate sPrice) participant match = Mail.
         , Mail.partContent = renderHtml
                 [shamlet|
                         <p>Hi #{participant}
-                        <p>You are Secret Santa for: <b>#{match}<\b>!
+                        <p>You are Secret Santa for: <b>#{match}</b>!
                         $maybe date <- sDate 
                                 Date: #{show date}
                         $maybe price <- sPrice 
