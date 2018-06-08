@@ -123,7 +123,8 @@ appMain = do
         settings <- 
                 loadYamlSettingsArgs
                 -- fall back to compile-time values, set to [] to require values at runtime
-                [configSettingsYmlValue]
+                --[configSettingsYmlValue]
+                []
                 -- allow environment variables to override
                 useEnv
 
