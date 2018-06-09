@@ -1,5 +1,6 @@
 
 <!-- Static navbar -->
+<!--
 <nav .navbar .navbar-default .navbar-static-top>
     <div .container>
         <div .navbar-header>
@@ -19,16 +20,14 @@
                 $forall MenuItem label route _ <- navbarRightFilteredMenuItems
                     <li :Just route == mcurrentRoute:.active>
                         <a href="@{route}">#{label}
+-->
 
 <!-- Page Contents -->
 
-$if (Just HomeR == mcurrentRoute)
-    ^{widget}
-$else
-    <div .container>
-        <div .row>
-            <div .col-md-12>
-                ^{widget}
+<div .container>
+    <div .row>
+        <div .col-md-12>
+            ^{widget}
 
 <!-- Footer -->
 <footer .footer>
