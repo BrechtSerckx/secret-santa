@@ -1,0 +1,7 @@
+.remove_button_enabled {
+    color: red;
+}
+
+.remove_button_disabled {
+    color: grey;
+}
