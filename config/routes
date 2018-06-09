@@ -7,3 +7,4 @@
 /robots.txt RobotsR GET
 
 /       SantaR GET POST
+/about  AboutR GET
