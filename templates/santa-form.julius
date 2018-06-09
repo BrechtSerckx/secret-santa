@@ -3,7 +3,7 @@
 
 $(document).ready(function() {
         var add_button      = $(".add_field_button"); 
-        var init_n_fields = 2;
+        var init_n_fields = 3;
         var wrapper = $(".participant_input_wrapper");
         
         if (!!wrapper) {
@@ -68,10 +68,16 @@ function check_participant_amount() {
 
 function enable_remove_button(input) {
         var button = $(input).find(".remove_field");
-        button.show();
+	$(button).removeClass("remove_button_disabled")
+	$(button).css('pointer-events', 'auto');
+	$(button).addClass("remove_button_enabled")
+        //button.show();
 }
 
 function disable_remove_button(input) {
         var button = $(input).find(".remove_field");
-        button.hide();
+	$(button).addClass("remove_button_disabled")
+	$(button).css('pointer-events', 'none');
+	$(button).removeClass("remove_button_enabled")
+        //button.hide();
 }
