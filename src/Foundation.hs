@@ -92,11 +92,6 @@ instance Yesod App where
                 -- Define the menu items of the header.
                 let menuItems =
                         [ NavbarLeft $ MenuItem
-                                { menuItemLabel = "Home"
-                                , menuItemRoute = HomeR
-                                , menuItemAccessCallback = True
-                                }
-                        , NavbarLeft $ MenuItem
                                 { menuItemLabel = "Secret Santa"
                                 , menuItemRoute = SantaR
                                 , menuItemAccessCallback = True
@@ -156,8 +151,7 @@ instance Yesod App where
 
 -- Define breadcrumbs.
 instance YesodBreadcrumbs App where
-  breadcrumb HomeR  = return ("Home", Nothing)
-  breadcrumb SantaR = return ("Home/Secret Santa", Nothing)
+  breadcrumb SantaR = return ("Secret Santa", Nothing)
   breadcrumb  _     = return ("home", Nothing)
 
 -- This instance is required to use forms. You can modify renderMessage to
