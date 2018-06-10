@@ -13,11 +13,15 @@ import           Data.Either (isLeft,isRight)
 import           Data.List (nub)
 import           Data.Maybe (fromJust,isJust)
 import           Data.Text.Lazy.Encoding (encodeUtf8)
+import qualified Data.Text.Lazy as LT
 import           Debug.Trace (trace)
 import           Text.Blaze.Html.Renderer.Utf8 (renderHtml)
+import qualified Text.Blaze.Html.Renderer.Text as BT (renderHtml)
 import qualified Text.Email.Validate as Email
 import           Text.Hamlet (shamlet)
-import           Text.Shakespeare.Text
+import           Text.Pandoc.Class (runPure)
+import           Text.Pandoc.Readers (readHtml)
+import           Text.Pandoc.Writers (writePlain)
 
 import           Import hiding (count,tail,trace,id,encodeUtf8,multiEmailField)
 import qualified Mail (sendMail,MailSettings(..),Address(..),Part(..),Mail(..),emptyMail,Encoding(..))
@@ -229,50 +233,54 @@ mkMail mailSettings to santaInfo participant match
                 , Mail.mailParts = [[textPart, htmlPart]]
                 }
         where
-                textPart = mkTextPart santaInfo participant match
-                htmlPart = mkHtmlPart santaInfo participant match
+                mailContent = mkMailContent santaInfo participant match
+                textPart = mkTextPart mailContent
+                htmlPart = mkHtmlPart mailContent
 
-mkTextPart :: SecretSanta.SantaInfo -> Text -> Text -> Mail.Part
-mkTextPart (SecretSanta.SantaInfo sDescr sDate sPrice) participant match = Mail.Part
+mkTextPart :: Html -> Mail.Part
+mkTextPart html = Mail.Part
         { Mail.partType = "text/plain; charset=utf-8"
         , Mail.partEncoding = Mail.None
         , Mail.partFilename = Nothing
-        , Mail.partContent = encodeUtf8
-                [stext|
-                        Hi #{participant}
-
-                        You are Secret Santa for: #{match}!
-
-                        Info:
-                        $if isJust sDate
-                                - Date: #{show (fromJust sDate)}
-                        $if isJust sPrice
-                                - Price: #{show (fromJust sPrice)}
-                        $if isJust sDescr
-                                - Description: #{fromJust sDescr}
-                |]
+        , Mail.partContent = encodeUtf8 . LT.fromStrict $ html2Text html
         , Mail.partHeaders = []
         }
 
-mkHtmlPart :: SecretSanta.SantaInfo -> Text -> Text -> Mail.Part
-mkHtmlPart (SecretSanta.SantaInfo sDescr sDate sPrice) participant match = Mail.Part
+
+html2Text :: Html -> Text
+html2Text html = 
+        let
+                rendered = LT.toStrict . BT.renderHtml $ html
+                converted = do
+                        doc <- readHtml def rendered
+                        writePlain def doc
+        in case runPure converted of
+                Left e  -> pack $ show e
+                Right t -> t
+
+
+
+mkHtmlPart :: Html -> Mail.Part
+mkHtmlPart html = Mail.Part
         { Mail.partType = "text/html; charset=utf-8"
         , Mail.partEncoding = Mail.None
         , Mail.partFilename = Nothing
-        , Mail.partContent = renderHtml
-                [shamlet|
-                        <p>Hi #{participant}
-                        <p>You are Secret Santa for: <b>#{match}</b>!
-                        <p>Additional info:
-                                <ul>
-                                        $maybe date <- sDate 
-                                                <li>Date: #{show date}
-                                        $maybe price <- sPrice 
-                                                <li>Price: #{price}
-                                        $maybe descr <- sDescr
-                                                <li>Description: #{descr}
-|]
+        , Mail.partContent = renderHtml html
         , Mail.partHeaders = []
         }
 
+mkMailContent :: SecretSanta.SantaInfo -> Text -> Text -> Html
+mkMailContent (SecretSanta.SantaInfo sDescr sDate sPrice) participant match =
+        [shamlet|
+                <p>Hi #{participant}
+                <p>You are Secret Santa for: <b>#{match}</b>!
+                <p>Additional info:
+                        <ul>
+                                $maybe date <- sDate 
+                                        <li>Date: #{show date}
+                                $maybe price <- sPrice 
+                                        <li>Price: #{price}
+                                $maybe descr <- sDescr
+                                        <li>Description: #{descr}
+        |]
 

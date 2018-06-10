@@ -49,6 +49,8 @@ dependencies:
 - blaze-html
 - email-validate
 - network
+- pandoc
+- data-default
 
 ghc-options:
 - -Wtabs
