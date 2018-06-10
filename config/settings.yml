@@ -44,10 +44,10 @@ mail:
         #, gmail_password: "my_password"
 
         # amazon ses settings
-        , ses_access_key:    "${SES_ACCESS_KEY}"
-        , ses_secret_key:    "${SES_SECRET_KEY}"
-        , ses_session_token: "${SES_SESSION_TOKEN}"
-        , ses_region:        "${SES_REGION}"
+        , ses_access_key:    "_env:SES_ACCESS_KEY:"
+        , ses_secret_key:    "_env:SES_SECRET_KEY}:"
+        , ses_session_token: "_env:SES_SESSION_TOKEN}:"
+        , ses_region:        "_env:SES_REGION}:"
         }
 
 # vim: set expandtab:
