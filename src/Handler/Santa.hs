@@ -240,14 +240,16 @@ mkTextPart (SecretSanta.SantaInfo sDescr sDate sPrice) participant match = Mail.
         , Mail.partContent = encodeUtf8
                 [stext|
                         Hi #{participant}
+
                         You are Secret Santa for: #{match}!
 
+                        Info:
                         $if isJust sDate
-                                Date: #{show (fromJust sDate)}
+                                - Date: #{show (fromJust sDate)}
                         $if isJust sPrice
-                                Price: #{show (fromJust sPrice)}
+                                - Price: #{show (fromJust sPrice)}
                         $if isJust sDescr
-                                Description: #{fromJust sDescr}
+                                - Description: #{fromJust sDescr}
                 |]
         , Mail.partHeaders = []
         }
@@ -261,12 +263,14 @@ mkHtmlPart (SecretSanta.SantaInfo sDescr sDate sPrice) participant match = Mail.
                 [shamlet|
                         <p>Hi #{participant}
                         <p>You are Secret Santa for: <b>#{match}</b>!
-                                $maybe date <- sDate 
-                                        Date: #{show date}
-                                $maybe price <- sPrice 
-                                        Price: #{price}
-                                $maybe descr <- sDescr
-                                        Description: #{descr}
+                        <p>Additional info:
+                                <ul>
+                                        $maybe date <- sDate 
+                                                <li>Date: #{show date}
+                                        $maybe price <- sPrice 
+                                                <li>Price: #{price}
+                                        $maybe descr <- sDescr
+                                                <li>Description: #{descr}
 |]
         , Mail.partHeaders = []
         }
