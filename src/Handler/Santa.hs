@@ -26,6 +26,7 @@ import           Text.Pandoc.Writers (writePlain)
 import           Import hiding (count,tail,trace,id,encodeUtf8,multiEmailField)
 import qualified Mail (sendMail,MailSettings(..),Address(..),Part(..),Mail(..),emptyMail,Encoding(..))
 import qualified SecretSanta
+import qualified SecretSanta.Match as SS.Match
 
 
 
@@ -160,7 +161,7 @@ postSantaR = do
 
 postSantaRSuccess :: SecretSanta.SantaData -> Handler (Widget,Widget)
 postSantaRSuccess santaData = do
-        matches <- liftIO $ SecretSanta.randomMatch $ SecretSanta.participants $ santaData
+        matches <- liftIO $ SS.Match.randomMatch $ SecretSanta.participants $ santaData
         let info = SecretSanta.santaInfo santaData
 
         mailSettings <- appMailSettings . appSettings <$> getYesod
