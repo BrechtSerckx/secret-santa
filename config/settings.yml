@@ -1,6 +1,3 @@
-# Values formatted like "_env:ENV_VAR_NAME:default_value" can be overridden by the specified environment variable.
-# See https://github.com/yesodweb/yesod/wiki/Configuration#overriding-configuration-values-with-environment-variables
-
 static-dir:     "_env:STATIC_DIR:static"
 host:           "_env:HOST:*4" # any IPv4 host
 port:           "_env:PORT:3000" # NB: The port `yesod devel` uses is distinct from this value. Set the `yesod devel` port from the command line.
@@ -10,10 +7,8 @@ ip-from-header: "_env:IP_FROM_HEADER:false"
 # Uncomment to set an explicit approot
 #approot:       "_env:APPROOT:http://localhost:3000"
 
-# By default, `yesod devel` runs in development, and built executables use
-# production settings (see below). To override this, use the following:
-#
-# development: false
+
+development: false
 
 # Optional values with the following production defaults.
 # In development, they default to the inverse.
@@ -37,7 +32,7 @@ mail:
         , subject:      "Secret Santa"
 
         # Email service: ses, gmail or sendmail
-        , service:      "ses"
+        , service:      "_env:MAILSERVICE:ses"
 
         # gmail settings
         #, gmail_username: "my_username"
@@ -45,9 +40,9 @@ mail:
 
         # amazon ses settings
         , ses_access_key:    "_env:SES_ACCESS_KEY:"
-        , ses_secret_key:    "_env:SES_SECRET_KEY}:"
-        , ses_session_token: "_env:SES_SESSION_TOKEN}:"
-        , ses_region:        "_env:SES_REGION}:"
+        , ses_secret_key:    "_env:SES_SECRET_KEY:"
+        , ses_session_token: "_env:SES_SESSION_TOKEN:"
+        , ses_region:        "_env:SES_REGION:"
         }
 
 # vim: set expandtab:
