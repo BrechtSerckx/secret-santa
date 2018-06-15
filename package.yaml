@@ -7,15 +7,13 @@ dependencies:
 # See: https://ghc.haskell.org/trac/ghc/ticket/12130
 - base >=4.8.2.0 && <4.9 || >=4.9.1.0 && <5
 
-# version 1.0 had a bug in reexporting Handler, causing trouble
-- classy-prelude-yesod >=0.10.2 && <1.0 || >=1.1
-
-- yesod >=1.4.3 && <1.5
-- yesod-core >=1.4.30 && <1.5
-- yesod-static >=1.4.0.3 && <1.6
-- yesod-form >=1.4.0 && <1.5
-- classy-prelude >=0.10.2
-- classy-prelude-conduit >=0.10.2
+- yesod >=1.6 && <1.7
+- yesod-core >=1.6 && <1.7
+- yesod-static >=1.6 && <1.7
+- yesod-form >=1.6 && <1.7
+- classy-prelude >=1.4 && <1.5
+- classy-prelude-conduit >=1.4 && <1.5
+- classy-prelude-yesod >=1.4 && <1.5
 - bytestring >=0.9 && <0.11
 - text >=0.11 && <2.0
 - template-haskell
@@ -24,11 +22,12 @@ dependencies:
 - monad-control >=0.3 && <1.1
 - wai-extra >=3.0 && <3.1
 - yaml >=0.8 && <0.9
-- http-conduit >=2.1 && <2.3
+- http-client-tls >=0.3 && <0.4
+- http-conduit >=2.3 && <2.4
 - directory >=1.1 && <1.4
 - warp >=3.0 && <3.3
 - data-default
-- aeson >=0.6 && <1.3
+- aeson >=0.6 && <1.4
 - conduit >=1.0 && <2.0
 - monad-logger >=0.3 && <0.4
 - fast-logger >=2.2 && <2.5
@@ -44,16 +43,12 @@ dependencies:
 - foreign-store
 - random
 - mime-mail
-- mime-mail-ses >=0.4.1
+- mime-mail-ses
 - smtp-mail
 - blaze-html
 - email-validate
-- network
 - pandoc
 - data-default
-
-ghc-options:
-- -Wtabs
 
 # The library contains all of our application code. The executable
 # defined below is just a thin wrapper.
@@ -64,14 +59,14 @@ library:
     then:
       ghc-options:
       - -Wall
+      - -fwarn-tabs
       - -O0
-      - -Wunused-matches
       cpp-options: -DDEVELOPMENT
     else:
       ghc-options:
       - -Wall
+      - -fwarn-tabs
       - -O2
-      - -Wunused-matches
 
 # Runnable executable for our application
 executables:
@@ -82,7 +77,6 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
-    - -Wunused-matches
     dependencies:
     - secret-santa
     when:
@@ -91,7 +85,7 @@ executables:
 
 # Test suite
 tests:
-  test:
+  secret-santa-test:
     main: Spec.hs
     source-dirs: test
     ghc-options: -Wall
@@ -110,7 +104,4 @@ flags:
     description: Turn on development settings, like auto-reload templates.
     manual: false
     default: false
-
-
-
 # vim: set tabstop=2 shiftwidth=2 expandtab:

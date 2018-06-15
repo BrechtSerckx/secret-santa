@@ -122,9 +122,7 @@ appMain :: IO ()
 appMain = do
         -- Get the settings from all relevant sources
         settings <- 
-                loadYamlSettings
-                --["config/settings.yml"]
-                []
+                loadYamlSettingsArgs
                 -- fall back to compile-time values, set to [] to require values at runtime
                 [configSettingsYmlValue]
                 -- allow environment variables to override
