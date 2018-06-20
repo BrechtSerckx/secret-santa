@@ -147,20 +147,43 @@ getSantaR = do
 
 postSantaR :: Handler Html
 postSantaR = do
-        ((result, _formWidget), _formEnctype) <- runFormPost multiForm
-        (infoWidget,bodyWidget) <- case result of 
-                FormSuccess ps -> postSantaRSuccess ps
-                FormFailure es -> postSantaRFailure es
-                FormMissing    -> postSantaRMissing
+        ((result, formWidget), formEnctype) <- runFormPost multiForm
+        case result of
+                FormSuccess res -> sendMails res >> return ()
+                _               -> return ()
+        let infoWidget = case result of 
+                FormSuccess _ -> [whamlet|Secret Santa successfully submitted!|]
+                _             -> [whamlet|Please fill in the participant names.|]
+        let bodyWidget = case result of 
+                FormSuccess _ -> [whamlet|Secret-Santa.xyz will now notify all participants!|]
+                FormFailure es -> [whamlet|
+                        <div .alert .alert-danger>
+                                There are errors in the form:
+                                <ul>
+                                        $forall e <- es
+                                                <li>#{e}
+                        <form method=post action=@{SantaR}#forms enctype=#{formEnctype} .form>
+                                ^{formWidget}
+                                <button type=button .add_field_button .btn>Add More
+                                <button .btn.btn-primary type="submit">
+                                        Match!
+                        |]
+                FormMissing    -> [whamlet|
+                        <div .alert .alert-warning>
+                                Please fill in the participants.
+                        <form method=post action=@{SantaR}#forms enctype=#{formEnctype} .form>
+                                ^{formWidget}
+                                <button type=button .add_field_button .btn>Add More
+                                <button .btn.btn-primary type="submit">
+                                        Match!
+                        |]
 
         defaultLayout $ do
                 setTitle "Secret Santa - BrechtSerckx.be"
                 $(widgetFile "santa")
         
-
-
-postSantaRSuccess :: SecretSanta.SantaData -> Handler (Widget,Widget)
-postSantaRSuccess santaData = do
+sendMails :: SecretSanta.SantaData -> Handler [(SecretSanta.Participant,SecretSanta.Participant)]
+sendMails santaData = do
         matches <- liftIO $ SS.Match.randomMatch $ SecretSanta.participants $ santaData
         let info = SecretSanta.santaInfo santaData
 
@@ -171,7 +194,11 @@ postSantaRSuccess santaData = do
                 $ mkMail mailSettings email info participant match
 
         liftIO $ mapM_ sendMatchEmail matches
+        return matches
 
+postSantaRSuccess :: SecretSanta.SantaData -> Handler (Widget,Widget)
+postSantaRSuccess santaData = do
+        matches <- sendMails santaData
         let infoWidget = 
                 [whamlet|
                 Secret Santa generated your matches!
@@ -189,37 +216,6 @@ postSantaRSuccess santaData = do
                                         <td .text-left>#{p}
                                         <td .text-center>-->
                                         <td .text-right>#{m}
-                |]
-        return (infoWidget,bodyWidget)
-
-
-
-postSantaRMissing :: Handler (Widget,Widget)
-postSantaRMissing = do
-        let infoWidget = 
-                [whamlet|
-                Error
-                |]
-
-        let bodyWidget = 
-                [whamlet|
-                <p>Error: missing form!
-                |]
-        return (infoWidget,bodyWidget)
-
-
-postSantaRFailure :: [Text] -> Handler (Widget,Widget)
-postSantaRFailure es = do
-        let infoWidget = 
-                [whamlet|
-                Error
-                |]
-
-        let bodyWidget = 
-                [whamlet|
-                <ul>
-                        $forall e <- es
-                                <li>#{e}
                 |]
         return (infoWidget,bodyWidget)
 
