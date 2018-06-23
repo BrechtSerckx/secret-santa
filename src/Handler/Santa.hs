@@ -33,20 +33,20 @@ import qualified SecretSanta.Match as SS.Match
 multiForm :: Html -> MForm Handler (FormResult SecretSanta.SantaData, Widget)
 multiForm extra = do
         -- description
-        let descrFieldSettings = FieldSettings "Description" (Just "Enter a description") (Just "description") (Just "description") [("class","col-xs-12 col-md-9")]
+        let descrFieldSettings = FieldSettings "Description" (Just "Enter a description") (Just "description") (Just "description") [("rows","6"),("class","form-control")]
         (descrRes, descrView) <- mopt textareaField descrFieldSettings Nothing
         -- date
-        let dateFieldSettings = FieldSettings "Date" (Just "Enter a date") (Just "date") (Just "date") [("class","col-xs-12 col-md-9")]
+        let dateFieldSettings = FieldSettings "Date" (Just "Enter a date") (Just "date") (Just "date") [("class","form-control ")]
         date <- utctDay <$> liftIO getCurrentTime
         (dateRes, dateView) <- mopt dayField dateFieldSettings $ Just $ Just $ date
         -- price
-        let priceFieldSettings = FieldSettings "Price" (Just "Enter a price") (Just "price") (Just "price") [("class","col-xs-12 col-md-9")]
+        let priceFieldSettings = FieldSettings "Price" (Just "Enter a price") (Just "price") (Just "price") [("class","form-control ")]
         (priceRes, priceView) <- mopt doubleField priceFieldSettings $ Just $ Just 5
         -- names
-        let namesFieldSettings = FieldSettings "Name" (Just "Enter a names") (Just "names") (Just "names") [("class","col-xs-12 col-sm-10 col-md-3")]
+        let namesFieldSettings = FieldSettings "Name" (Just "Enter a names") (Just "names") (Just "names") [("class","form-control ")]
         (namesRes, namesView) <- mreq multiTextField namesFieldSettings Nothing
         -- email
-        let emailsFieldSettings = FieldSettings "Email" (Just "Enter a emails") (Just "emails") (Just "emails") [("class","col-xs-12 col-sm-10 col-md-4")]
+        let emailsFieldSettings = FieldSettings "Email" (Just "Enter a emails") (Just "emails") (Just "emails") [("class","form-control ")]
         (emailsRes, emailsView) <- mreq multiEmailField emailsFieldSettings Nothing
 
         let widget = $(widgetFile "santa-form")
