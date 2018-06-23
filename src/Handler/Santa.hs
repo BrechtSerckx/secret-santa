@@ -134,7 +134,7 @@ getSantaR = do
                 |]
 
         let bodyWidget = [whamlet|
-                <form method=post action=@{SantaR}#forms enctype=#{formEnctype} .form>
+                <form method=post action=@{SantaR}#forms enctype=#{formEnctype} data-toggle="validator" .form>
                         ^{formWidget}
                         <button type=button .add_field_button .btn>Add More
                         <button .btn.btn-primary type="submit">
@@ -162,7 +162,7 @@ postSantaR = do
                                 <ul>
                                         $forall e <- es
                                                 <li>#{e}
-                        <form method=post action=@{SantaR}#forms enctype=#{formEnctype} .form>
+                        <form method=post action=@{SantaR}#forms enctype=#{formEnctype} data-toggle="validator" .form>
                                 ^{formWidget}
                                 <button type=button .add_field_button .btn>Add More
                                 <button .btn.btn-primary type="submit">
@@ -171,7 +171,7 @@ postSantaR = do
                 FormMissing    -> [whamlet|
                         <div .alert .alert-warning>
                                 Please fill in the participants.
-                        <form method=post action=@{SantaR}#forms enctype=#{formEnctype} .form>
+                        <form method=post action=@{SantaR}#forms enctype=#{formEnctype} data-toggle="validator" .form>
                                 ^{formWidget}
                                 <button type=button .add_field_button .btn>Add More
                                 <button .btn.btn-primary type="submit">

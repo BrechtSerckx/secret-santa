@@ -58,17 +58,16 @@
                             <label .col-lg-1 .col-md-2 .hidden-sm .hidden-xs>
                                 ^{fvLabel namesView}
                             <div .col-lg-4 .col-md-3 .col-sm-4 .col-xs-11 >
-                                <div .input-group>
+                                <div .input-group >
                                     <span id="^{fvId namesView}-addon" .input-group-addon .glyphicon .glyphicon-user >
                                     ^{fvInput namesView}
                         <div .form-group>
                             <label .col-lg-1 .col-md-2 .hidden-sm .hidden-xs>
                                 ^{fvLabel emailsView}
                             <div .col-lg-5 .col-md-4 .col-sm-7 .col-xs-11 >
-                                <div .input-group>
+                                <div .input-group >
                                     <span id="^{fvId emailsView}-addon" .input-group-addon >
                                         @
                                     ^{fvInput emailsView}
                         <div .remove_field .btn .glyphicon .glyphicon-remove .col-lg-1 .col-md-1 .col-sm-1 .col-xs-1>
                 <br>
-<br>
