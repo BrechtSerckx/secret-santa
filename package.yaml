@@ -59,14 +59,14 @@ library:
     then:
       ghc-options:
       - -Wall
-      - -fwarn-tabs
       - -O0
+      - -Wunused-matches
       cpp-options: -DDEVELOPMENT
     else:
       ghc-options:
       - -Wall
-      - -fwarn-tabs
       - -O2
+      - -Wunused-matches
 
 # Runnable executable for our application
 executables:
@@ -77,6 +77,7 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -Wunused-matches
     dependencies:
     - secret-santa
     when:

@@ -7,7 +7,7 @@ $(document).ready(function() {
         var wrapper = $(".participant_input_wrapper");
         
         if (!!wrapper) {
-                for (i = get_participant_inputs().length; i < init_n_fields; i++) {
+                for (i = get_participant_inputs().length; i <= init_n_fields; i++) {
                         add_participant_input();
                 }
         }   
