@@ -40,10 +40,10 @@ multiForm extra = do
         date <- utctDay <$> liftIO getCurrentTime
         (dateRes, dateView) <- mopt dayField dateFieldSettings $ Just $ Just $ date
         -- price
-        let priceFieldSettings = FieldSettings "Price" (Just "Enter a price") (Just "price") (Just "price") [("class","form-control ")]
+        let priceFieldSettings = FieldSettings "Price" (Just "Enter a price") (Just "price") (Just "price") [("class","form-control "),("step","0.01"),("min","0")]
         (priceRes, priceView) <- mopt doubleField priceFieldSettings $ Just $ Just 5
         -- names
-        let namesFieldSettings = FieldSettings "Name" (Just "Enter a names") (Just "names") (Just "names") [("class","form-control ")]
+        let namesFieldSettings = FieldSettings "Name" (Just "Enter a names") (Just "names") (Just "names") [("class","form-control "),("data-unique","")]
         (namesRes, namesView) <- mreq multiTextField namesFieldSettings Nothing
         -- email
         let emailsFieldSettings = FieldSettings "Email" (Just "Enter a emails") (Just "emails") (Just "emails") [("class","form-control ")]
@@ -134,7 +134,7 @@ getSantaR = do
                 |]
 
         let bodyWidget = [whamlet|
-                <form method=post action=@{SantaR}#forms enctype=#{formEnctype} data-toggle="validator" .form>
+                <form method=post action=@{SantaR}#forms enctype=#{formEnctype} role="form" data-toggle="validator" .form>
                         ^{formWidget}
                         <button type=button .add_field_button .btn>Add More
                         <button .btn.btn-primary type="submit">
@@ -162,7 +162,7 @@ postSantaR = do
                                 <ul>
                                         $forall e <- es
                                                 <li>#{e}
-                        <form method=post action=@{SantaR}#forms enctype=#{formEnctype} data-toggle="validator" .form>
+                        <form method=post action=@{SantaR}#forms enctype=#{formEnctype} role="form" data-toggle="validator" .form>
                                 ^{formWidget}
                                 <button type=button .add_field_button .btn>Add More
                                 <button .btn.btn-primary type="submit">
@@ -171,7 +171,7 @@ postSantaR = do
                 FormMissing    -> [whamlet|
                         <div .alert .alert-warning>
                                 Please fill in the participants.
-                        <form method=post action=@{SantaR}#forms enctype=#{formEnctype} data-toggle="validator" .form>
+                        <form method=post action=@{SantaR}#forms enctype=#{formEnctype} role="form" data-toggle="validator" .form>
                                 ^{formWidget}
                                 <button type=button .add_field_button .btn>Add More
                                 <button .btn.btn-primary type="submit">

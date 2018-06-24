@@ -11,6 +11,7 @@
             ^{fvLabel descrView}
         <div .col-lg-10 .col-md-9 .col-sm-12 .col-xs-12 >
             ^{fvInput descrView}
+            <div .help-block .with-errors>
 <br>
 
 <div .row >
@@ -23,6 +24,7 @@
             <div .input-group>
                 <span id="^{fvId dateView}-addon" .input-group-addon .glyphicon .glyphicon-calendar >
                 ^{fvInput dateView}
+            <div .help-block .with-errors>
 <br>
 
 <div .row >
@@ -35,6 +37,7 @@
             <div .input-group>
                 <span id="^{fvId priceView}-addon" .input-group-addon .glyphicon .glyphicon-euro >
                 ^{fvInput priceView}
+            <div .help-block .with-errors>
 <br>
 
 <div .row>
@@ -58,16 +61,22 @@
                             <label .col-lg-1 .col-md-2 .hidden-sm .hidden-xs>
                                 ^{fvLabel namesView}
                             <div .col-lg-4 .col-md-3 .col-sm-4 .col-xs-10 >
-                                <div .input-group >
-                                    <span id="^{fvId namesView}-addon" .input-group-addon .glyphicon .glyphicon-user >
-                                    ^{fvInput namesView}
+                                <div .row>
+                                    <div .input-group >
+                                        <span id="^{fvId namesView}-addon" .input-group-addon .glyphicon .glyphicon-user >
+                                        ^{fvInput namesView}
+                                <div .row>
+                                    <div .help-block .with-errors>
                         <div .form-group>
                             <label .col-lg-1 .col-md-2 .hidden-sm .hidden-xs>
                                 ^{fvLabel emailsView}
                             <div .col-lg-5 .col-md-4 .col-sm-7 .col-xs-10 >
-                                <div .input-group >
-                                    <span id="^{fvId emailsView}-addon" .input-group-addon >
-                                        @
-                                    ^{fvInput emailsView}
+                                <div .row>
+                                    <div .input-group >
+                                        <span id="^{fvId emailsView}-addon" .input-group-addon >
+                                            @
+                                        ^{fvInput emailsView}
+                                <div .row>
+                                    <div .help-block .with-errors>
                         <div .remove_field .btn .glyphicon .glyphicon-remove .col-lg-1 .col-md-1 .col-sm-1 .col-xs-2>
                 <br>
