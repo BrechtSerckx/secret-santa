@@ -5,6 +5,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE QuasiQuotes           #-}
 {-# LANGUAGE EmptyCase             #-}
+{-# LANGUAGE FlexibleContexts      #-}
 module Handler.Santa where
 
 
@@ -126,20 +127,28 @@ parseEmails es
                         es' = map (BS.pack . unpack) es
 
 
+createForm (formWidget,formEnctype) = [whamlet|
+                <form method=post action=@{SantaR}#forms enctype=#{formEnctype} role="form" data-toggle="validator" .form>
+                        ^{formWidget}
+                        <div .row>
+                                <div .col-xs-5>
+                                        <button type=button .add_field_button .btn .btn-info .btn-lg .btn-block >
+                                                <span .pull-left .glyphicon .glyphicon-plus>
+                                                Add More
+                                <div .col-xs-7>
+                                        <button .btn.btn-primary type="submit" .btn-lg .btn-block>
+                                                <span .pull-left .glyphicon .glyphicon-random>
+                                                Match!
+                |]
+
 getSantaR :: Handler Html
 getSantaR = do
-        (formWidget, formEnctype) <- generateFormPost multiForm
+        form <- generateFormPost multiForm
         let infoWidget = [whamlet|
                 Please fill in the participant names.
                 |]
+        let bodyWidget = createForm form
 
-        let bodyWidget = [whamlet|
-                <form method=post action=@{SantaR}#forms enctype=#{formEnctype} role="form" data-toggle="validator" .form>
-                        ^{formWidget}
-                        <button type=button .add_field_button .btn>Add More
-                        <button .btn.btn-primary type="submit">
-                                Match!
-                |]
         defaultLayout $ do
                 setTitle "Secret Santa - BrechtSerckx.be"
                 $(widgetFile "santa")
@@ -147,13 +156,15 @@ getSantaR = do
 
 postSantaR :: Handler Html
 postSantaR = do
-        ((result, formWidget), formEnctype) <- runFormPost multiForm
+        ((result, fw), enc) <- runFormPost multiForm
+        let form = (fw,enc)
         case result of
                 FormSuccess res -> sendMails res >> return ()
                 _               -> return ()
         let infoWidget = case result of 
                 FormSuccess _ -> [whamlet|Secret Santa successfully submitted!|]
                 _             -> [whamlet|Please fill in the participant names.|]
+        let formWidget = createForm form
         let bodyWidget = case result of 
                 FormSuccess _ -> [whamlet|Secret-Santa.xyz will now notify all participants!|]
                 FormFailure es -> [whamlet|
@@ -162,20 +173,12 @@ postSantaR = do
                                 <ul>
                                         $forall e <- es
                                                 <li>#{e}
-                        <form method=post action=@{SantaR}#forms enctype=#{formEnctype} role="form" data-toggle="validator" .form>
-                                ^{formWidget}
-                                <button type=button .add_field_button .btn>Add More
-                                <button .btn.btn-primary type="submit">
-                                        Match!
+                        ^{formWidget}
                         |]
                 FormMissing    -> [whamlet|
                         <div .alert .alert-warning>
                                 Please fill in the participants.
-                        <form method=post action=@{SantaR}#forms enctype=#{formEnctype} role="form" data-toggle="validator" .form>
-                                ^{formWidget}
-                                <button type=button .add_field_button .btn>Add More
-                                <button .btn.btn-primary type="submit">
-                                        Match!
+                        ^{formWidget}
                         |]
 
         defaultLayout $ do

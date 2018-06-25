@@ -4,13 +4,10 @@
     <p .lead>
         Match up with your friends
 
-<div .container>
-    <!-- Starting
-        ================================================== -->
-    <div .page-header>
-        <h1 #start>
-            Secret Santa
-        <p>
-            ^{infoWidget}
-    <div .well>
+<div .well>
+    <h1 #start>
+        Secret Santa
+    <p>
+        ^{infoWidget}
+    <p>
         ^{bodyWidget}
