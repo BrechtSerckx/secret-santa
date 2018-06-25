@@ -131,11 +131,11 @@ createForm (formWidget,formEnctype) = [whamlet|
                 <form method=post action=@{SantaR}#forms enctype=#{formEnctype} role="form" data-toggle="validator" .form>
                         ^{formWidget}
                         <div .row>
-                                <div .col-xs-5>
+                                <div .col-lg-5 .col-md-5 .col-sm-4 .col-xs-6>
                                         <button type=button .add_field_button .btn .btn-info .btn-lg .btn-block >
                                                 <span .pull-left .glyphicon .glyphicon-plus>
                                                 Add More
-                                <div .col-xs-7>
+                                <div .col-lg-7 .col-md-7 .col-sm-8 .col-xs-6>
                                         <button .btn.btn-primary type="submit" .btn-lg .btn-block>
                                                 <span .pull-left .glyphicon .glyphicon-random>
                                                 Match!
