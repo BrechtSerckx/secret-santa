@@ -1,19 +1,19 @@
-<div .masthead>
-    <div .container>
-        <div .row>
-            <h1 .header>
-                Secret-Santa
-            <h2>
-                A Free and Open-Source Software project, written in Haskell using Yesod.
+<div .jumbotron>
+    <h1 .page-header>
+        Secret-Santa
+    <p .lead>
+        A Free and Open-Source Software project, written in Haskell using Yesod.
 
-<div .container>
-    <!-- Starting
-        ================================================== -->
+<div .well>
+    <div .row>
+        <div .col-xs-12>
+            <h1 #about>
+                About
     <div .bs-docs-section>
         <div .row>
             <div .col-lg-12>
-                <div .page-header>
-                    <h1 #start>Secret-Santa
+                <div .header>
+                    <h2 #history>History
                     <p>
                         I am Brecht, creator of this secret santa website. I am a Computer Science student at KU Leuven (Belgium).
                         My interests are programming (Haskell, Prolog), music and some other stuff.
@@ -31,8 +31,8 @@
     <div .bs-docs-section>
        <div .row>
            <div .col-lg-12>
-               <div .page-header>
-                   <h1 #problems>Problems
+               <div .header>
+                   <h2 #problems>Problems
 
                    <p>
                         If you encounter any problems, please open an issue in the GitLab repository, or <a href="mailto:webmaster@secret-santa.xyz">send me a mail</a>.
@@ -46,8 +46,8 @@
     <div .bs-docs-section>
        <div .row>
            <div .col-lg-12>
-               <div .page-header>
-                   <h1 #test>Donations
+               <div .header>
+                   <h2 #test>Donations
 
                    <p>
                        This site is free to use, without advertisements. It does however uses resources which costs money.

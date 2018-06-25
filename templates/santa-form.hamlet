@@ -1,7 +1,8 @@
 #{extra}
 <div .row>
-    <h4>
-        General
+    <div .col-xs-12>
+        <h3>
+            General
 
 <div .row >
     <label .control-label .hidden-lg .hidden-md .col-sm-12 .col-xs-12 for="description" >
@@ -41,8 +42,9 @@
 <br>
 
 <div .row>
-    <h4>
-        Participants:
+    <div .col-xs-12>
+        <h3>
+            Participants:
 <div .row>
     <div .col-lg-12>
         <div .row>
