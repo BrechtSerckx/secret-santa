@@ -21,3 +21,4 @@ cabal.sandbox.config
 \#*
 secret-santa.cabal
 .env
+bin/deploy.sh
