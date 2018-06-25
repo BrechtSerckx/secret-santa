@@ -99,7 +99,7 @@ multiTextField = Field
         { fieldParse = \rawVals _fileVals -> return $ Right $ Just rawVals
         , fieldView = \theId name attrs val isReq ->
                 [whamlet|
-                        <input id="#{theId}" name="#{name}" *{attrs} type=text :isReq:required :(isRight val):data-defaults="#{either id unwords val}">
+                        <input id="#{theId}" name="#{name}" *{attrs} type=text :isReq:required :(isLeft val):data-defaults="" :(isRight val):data-defaults="#{either id (intercalate ",") val}">
                 |] 
         , fieldEnctype = UrlEncoded
         }
@@ -112,7 +112,7 @@ multiEmailField = Field
         { fieldParse = \rawVals _fileVals -> return $ parseEmails rawVals 
         , fieldView = \theId name attrs val isReq ->
                 [whamlet|
-                        <input id="#{theId}" name="#{name}" *{attrs} type=email :isReq:required :(isRight val):data-defaults="#{either id unwords val}">
+                        <input id="#{theId}" name="#{name}" *{attrs} type=email :isReq:required :(isLeft val):data-defaults="" :(isRight val):data-defaults="#{either id (intercalate ",") val}">
                 |]
         , fieldEnctype = UrlEncoded
         }
