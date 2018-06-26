@@ -7,7 +7,5 @@
 <div .well>
     <h1 #start>
         Secret Santa
-    <p>
-        ^{infoWidget}
-    <p>
-        ^{bodyWidget}
+    ^{infoWidget}
+    ^{bodyWidget}

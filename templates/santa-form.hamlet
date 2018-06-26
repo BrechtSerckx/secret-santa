@@ -56,7 +56,7 @@
                     ^{fvLabel emailsView}
             <div .hidden-lg .hidden-md .col-sm-1 .hidden-xs >
         <div .participant_input_wrapper>
-            <row .participant_input>
+            <div .participant_input>
                 <div .row>
                     <div>
                         <div .form-group>
