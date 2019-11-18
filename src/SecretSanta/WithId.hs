@@ -2,7 +2,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Data.WithId where
+module SecretSanta.WithId where
 
 import Data.Aeson
 

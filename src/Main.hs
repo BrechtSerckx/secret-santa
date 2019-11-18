@@ -3,25 +3,23 @@
 {-# LANGUAGE TypeOperators #-}
 module Main where
 
-import Control.Concurrent.STM.TVar
-import Control.Monad.IO.Class
-import Control.Monad.Trans.Class
+import Control.Monad.Trans
 import Control.Monad.Trans.Reader
-import qualified Data.Map as Map
-import Data.SecretSanta.Hat
 import Data.Text
-import Data.WithId
-import Network.Wai
 import Network.Wai.Handler.Warp
-import SecretSanta.MonadSanta
-import SecretSanta.MonadSanta.InMemory
 import Servant
+
+import SecretSanta.App
+import SecretSanta.Hat
+import SecretSanta.MonadSanta
+import SecretSanta.WithId
 
 main :: IO ()
 main = do
   putStrLn "hello world"
-  mem <- newTVarIO Map.empty
-  run 9000 $ serve (Proxy @SecretSantaAPI) (secretSantaServer mem)
+  env <- emptyEnv
+  run 9000 $ serve (Proxy @SecretSantaAPI) (secretSantaServer env)
+
 
 type SecretSantaAPI
   = "api" :> "secretsanta" :>
@@ -34,11 +32,11 @@ type SecretSantaAPI
     :> Post '[JSON] (Maybe Text)
     )
 
-inMemorySantaToHandler :: (TVar Memory) -> InMemorySanta a -> Handler a
-inMemorySantaToHandler mem r = liftIO $ runReaderT r mem
-
-secretSantaServer :: TVar Memory -> Server SecretSantaAPI
-secretSantaServer mem = hoistServer (Proxy @SecretSantaAPI) (inMemorySantaToHandler mem)
+secretSantaServer :: Env -> Server SecretSantaAPI
+secretSantaServer env = runServer
     $  putHat
   :<|> getHat
   :<|> matchHatById
+ where
+  runServer = hoistServer (Proxy @SecretSantaAPI) mkHandler
+  mkHandler a = liftIO $ runReaderT a env

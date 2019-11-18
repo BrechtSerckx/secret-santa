@@ -8,7 +8,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-module Data.SecretSanta.Hat where
+module SecretSanta.Hat where
 
 import Data.Aeson
 import Data.Functor.Identity

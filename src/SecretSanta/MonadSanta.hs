@@ -1,8 +1,9 @@
 module SecretSanta.MonadSanta where
 
-import Data.SecretSanta.Hat
 import Data.Text
-import Data.WithId
+
+import SecretSanta.Hat
+import SecretSanta.WithId
 
 class MonadSanta m where
   -- | Take an unmatched hat and put it in the database

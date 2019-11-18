@@ -22,6 +22,7 @@ dependencies:
   - warp
   - servant-server
   - aeson
+  - mtl
 
 executables:
   secret-santa:
