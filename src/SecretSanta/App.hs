@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 module SecretSanta.App where
 
@@ -14,7 +15,7 @@ import SecretSanta.Hat
 import SecretSanta.MonadSanta
 import SecretSanta.WithId
 
-type Memory = Map.Map Id AnyHat
+type Memory = Map.Map (Id App) AnyHat
 
 newtype Env =
   Env
@@ -27,8 +28,10 @@ emptyEnv = do
   return $ Env mem
 
 type App = ReaderT Env IO
+type AppId = Id App
 
 instance MonadSanta App where
+  type Id App = Int
 
   putHat h = do
     let anyhat = AnyHat h
@@ -48,14 +51,14 @@ instance MonadSanta App where
     let mhat = Map.lookup n mem
     case mhat of
       Nothing ->
-        return . Just $ "Hat not found"
+        return . Just . SantaError $ "Hat not found"
       Just (AnyHat (MatchedHat _ _ _ _)) ->
-        return . Just $ "Hat is already matched"
+        return . Just . SantaError $ "Hat is already matched"
       Just (AnyHat hat@(UnmatchedHat _ _ _)) -> do
         let hat' = AnyHat . matchHat $ hat
         lift . atomically $ stateTVar tvar $ \mem' ->
           let mhat' = Map.lookup n mem' in
           if mhat /= mhat'
-          then (Just $ "Hat changed while matching", mem')
+          then (Just . SantaError $ "Hat changed while matching", mem')
           else (Nothing, Map.insert n hat' mem')
 

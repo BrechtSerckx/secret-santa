@@ -24,12 +24,12 @@ main = do
 type SecretSantaAPI
   = "api" :> "secretsanta" :>
     (  ReqBody '[JSON] UnmatchedHat
-    :> Put '[JSON] Id
-  :<|> Capture "id" Id
-    :> Get '[JSON] (Maybe (HasId AnyHat))
-  :<|> Capture "id" Id
+    :> Put '[JSON] AppId
+  :<|> Capture "id" AppId
+    :> Get '[JSON] (Maybe (HasId App AnyHat))
+  :<|> Capture "id" AppId
     :> "match"
-    :> Post '[JSON] (Maybe Text)
+    :> Post '[JSON] (Maybe SantaError)
     )
 
 secretSantaServer :: Env -> Server SecretSantaAPI
